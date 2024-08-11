@@ -21,8 +21,8 @@ public class PatientDetailService {
 
     // Create a new patient
     public Patient createPatient(Patient patient) {
-      //  patient.setCreatedAt(LocalDateTime.now());
-      //  patient.setUpdatedAt(LocalDateTime.now());
+       patient.setCreatedAt(LocalDateTime.now());
+       patient.setUpdatedAt(LocalDateTime.now());
         return patientRepository.save(patient);
     }
 
@@ -43,12 +43,12 @@ public class PatientDetailService {
                 .map(patient -> {
                     patient.setFirstName(patientDetails.getFirstName());
                     patient.setLastName(patientDetails.getLastName());
-                /*    patient.setDateOfBirth(patientDetails.getDateOfBirth());
+                    patient.setDateOfBirth(patientDetails.getDateOfBirth());
                     patient.setGender(patientDetails.getGender());
                     patient.setContactNumber(patientDetails.getContactNumber());
                     patient.setEmail(patientDetails.getEmail());
                     patient.setAddress(patientDetails.getAddress());
-                    patient.setUpdatedAt(LocalDateTime.now());*/
+                    patient.setUpdatedAt(LocalDateTime.now());
                     return patientRepository.save(patient);
                 });
     }
