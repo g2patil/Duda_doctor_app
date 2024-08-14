@@ -51,6 +51,7 @@ public class SecurityConf {
 				registery.requestMatchers("/register/user").permitAll();
 				registery.requestMatchers("/register/patient").permitAll();
 				registery.requestMatchers("/adnya/register/patient").permitAll();
+				registery.requestMatchers("/adnya/register/opd").permitAll();
 				registery.requestMatchers("/adnya/register/user").permitAll();
 				registery.requestMatchers("/adnya/register/bldg").permitAll();
 				registery.requestMatchers("/adnya/home").permitAll();

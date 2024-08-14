@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -22,12 +23,15 @@ public class Patient {
     private String lastName;
     private LocalDate dateOfBirth;
     private String gender;
+    @Column(unique=true)
     private String contactNumber;
     private String email;
     private String address;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @Column(nullable = false)
+    private int doctorId;
     
     @PrePersist
     protected void onCreate() {
@@ -100,6 +104,14 @@ public class Patient {
 	}
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
+	}
+
+	public int getDoctorId() {
+		return doctorId;
+	}
+
+	public void setDoctorId(int doctorId) {
+		this.doctorId = doctorId;
 	}
 	
 

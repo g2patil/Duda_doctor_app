@@ -29,9 +29,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.JwtUtil;
 import model.MyUser;
 import model.MyUserRepository;
+import model.OPD;
 import model.Patient;
 import model.bldg;
 import model.bldgRepository;
+import repository.OPDRepository;
 import repository.PatientRepository;
 
 
@@ -59,6 +61,9 @@ public class ContentController {
 	
 	@Autowired
 	private MyUserRepository myUserRepository;
+	
+	@Autowired
+	private OPDRepository opdRepository;
 	
 	
 	@Autowired
@@ -94,7 +99,12 @@ public class ContentController {
 				return patientRepository.save(patient);
 	
 }		
+	@PostMapping("/register/opd")
+	public OPD createOpd(@RequestBody OPD opd){
+		
+				return opdRepository.save(opd);
 	
+}	
 	
 	
 	
