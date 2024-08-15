@@ -120,7 +120,11 @@ public class ContentController {
 	 return myUserRepository.findByUsername(usr);
    }
 	
-
+	@GetMapping("/patient/find/{pst}")
+	 public Optional<Patient> getPatient(@PathVariable Integer pst) {
+		//return null;
+	 return patientRepository.findByPatientId(pst);
+  }
 	
 	
 	@Autowired

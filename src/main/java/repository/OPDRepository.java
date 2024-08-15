@@ -7,4 +7,5 @@ import java.util.UUID;
 
 @Repository
 public interface OPDRepository extends JpaRepository<OPD, UUID> {
+	
 }
