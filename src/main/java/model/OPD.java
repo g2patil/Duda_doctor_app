@@ -8,9 +8,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "opd")
+@Table(name = "opd", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"patientId", "visitDate"})
+})
 public class OPD {
     @Id
     @GeneratedValue
@@ -29,6 +32,7 @@ public class OPD {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.visitDate = LocalDate.now();
     }
 
     // Getters and Setters
