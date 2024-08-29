@@ -2,6 +2,7 @@ package service;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,7 +12,6 @@ import repository.PatientRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class PatientDetailService {
@@ -27,7 +27,7 @@ public class PatientDetailService {
     }
 
     // Get a patient by ID
-    public Optional<Patient> getPatientById(UUID patientId) {
+    public Optional<Patient> getPatientById(Integer patientId) {
         return patientRepository.findById(patientId);
     }
 
@@ -38,7 +38,7 @@ public class PatientDetailService {
 
     // Update an existing patient
     @Transactional
-    public Optional<Patient> updatePatient(UUID patientId, Patient patientDetails) {
+    public Optional<Patient> updatePatient(Integer patientId, Patient patientDetails) {
         return patientRepository.findById(patientId)
                 .map(patient -> {
                     patient.setFirstName(patientDetails.getFirstName());
@@ -54,7 +54,7 @@ public class PatientDetailService {
     }
 
     // Delete a patient by ID
-    public void deletePatient(UUID patientId) {
+    public void deletePatient(Integer patientId) {
         patientRepository.deleteById(patientId);
     }
 
@@ -62,4 +62,41 @@ public class PatientDetailService {
     public List<Patient> findPatientsByLastName(String lastName) {
         return patientRepository.findByLastName(lastName);
     }
+    
+    public static Specification searchPatients(String firstName, String lastName, String gender, String contactNumber, String email) {
+        Specification<Patient> spec = Specification.where(null);
+        boolean isAnyParameterProvided = false;
+       
+            if (firstName != null) {
+                spec = spec.and(PatientSpecification.hasFirstName(firstName));
+                isAnyParameterProvided = true;
+            }
+            if (lastName != null) {
+                spec = spec.and(PatientSpecification.hasLastName(lastName));
+                isAnyParameterProvided = true;
+            }
+            if (gender != null) {
+                spec = spec.and(PatientSpecification.hasGender(gender));
+                isAnyParameterProvided = true;
+            }
+            if (contactNumber != null) {
+                spec = spec.and(PatientSpecification.hasContactNumber(contactNumber));
+                isAnyParameterProvided = true;
+            }
+            if (email != null) {
+                spec = spec.and(PatientSpecification.hasEmail(email));
+                isAnyParameterProvided = true;
+            }
+           
+            if (!isAnyParameterProvided) {
+                // If no parameters are provided, either throw an exception or return a Specification that matches all patients
+                throw new IllegalArgumentException("At least one search parameter must be provided.");
+                // Uncomment the following line if you want to match all patients when no parameters are provided
+                // spec = Specification.where((root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
+            }
+            return spec;
+        
+    }
+    
+    
 }

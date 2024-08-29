@@ -1,12 +1,18 @@
 package model;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 
 @Entity
 public class MyUser {
@@ -17,10 +23,32 @@ public class MyUser {
     private String username;
     @Column(length =255)
     private String password;
-    @Column(length =30)
-    private String role;
+ //   @Column(length =30)
+  //  private Role role;
     @Column(length =10)
     private long mob;
+    
+    private String Role_name;
+    
+    public String getRole_name() {
+		return Role_name;
+	}
+	public void setRole_name(String role_name) {
+		Role_name = role_name;
+	}
+
+
+
+	@ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
+    )
+	
+    private Set<Role> roles = new HashSet<>();
+    
+    
 	public long getId() {
 		return id;
 	}
@@ -45,16 +73,23 @@ public class MyUser {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public String getRole() {
-		return role;
-	}
-	public void setRole(String role) {
-		this.role = role;
-	}
+
 	
 	public List<MyUser> findAll() {
 		// TODO Auto-generated method stub
 		return null;
 	}
-    
+	public Set<Role> getRoles() {
+		return roles;
+	}
+	
+	
+
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}
+	
+
+	
+	
 }

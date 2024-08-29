@@ -1,5 +1,6 @@
 package repository;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface PatientRepository extends JpaRepository<Patient, UUID> {
+public interface PatientRepository extends JpaRepository<Patient, Integer> {
     
    // Custom query method to find patients by last name
     List<Patient> findByLastName(String lastName);
@@ -19,6 +20,8 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     List<Patient> findByFirstNameAndLastName(String firstName, String lastName);
 
     Optional<Patient> findByPatientId(int patientId);
+
+	List<Patient> findAll(Specification<Patient> spec);
 
 	
 

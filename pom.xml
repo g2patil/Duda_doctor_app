@@ -80,7 +80,18 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-	
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt</artifactId>
+    <version>0.9.1</version> <!-- Check for the latest version -->
+</dependency>
+		
+		<dependency>
+			<groupId>com.adnya</groupId>
+			<artifactId>com.adnya.g2</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		
 	</dependencies>
 
 	<build>
