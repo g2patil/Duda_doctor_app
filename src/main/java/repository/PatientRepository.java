@@ -22,6 +22,7 @@ public interface PatientRepository extends JpaRepository<Patient, Integer> {
     Optional<Patient> findByPatientId(int patientId);
 
 	List<Patient> findAll(Specification<Patient> spec);
+	;
 
 	
 

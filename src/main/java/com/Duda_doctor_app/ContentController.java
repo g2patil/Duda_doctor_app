@@ -1,10 +1,14 @@
 package com.Duda_doctor_app;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,7 +19,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +32,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import model.MyUser;
 import model.MyUserDetailService;
@@ -48,6 +56,82 @@ import service.PatientDetailService;
 @RestController
 @RequestMapping("/adnya")
 public class ContentController {
+	
+	@PostMapping("/login")
+	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest, HttpServletRequest request) {
+	    HttpSession session = request.getSession(true); // Ensure session is created if not exists
+
+	    try {
+	        System.out.println("Session ID: " + session.getId());
+
+	        Authentication authentication = authenticationManager.authenticate(
+	                new UsernamePasswordAuthenticationToken(
+	                        authRequest.getUsername(),
+	                        authRequest.getPassword()
+	                )
+	        );
+
+	        // Set authentication in the security context
+	        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+	        String sessionId = session.getId();
+	        
+	        System.out.println("Session ID after authentication: " + sessionId);
+
+	        return ResponseEntity.ok().body(Map.of("sessionId", sessionId, "message", "Login successful"));
+	    } catch (AuthenticationException e) {
+	    	System.out.println("Authentication failed"+e);
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                             .body(Map.of("error", "Invalid username or password"));
+	    }
+	}
+
+	
+/*
+	@PostMapping("/login")
+	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest,HttpSession session) {
+	    try {
+	    	System.out.println("Session ID: " + session);
+	    	System.out.println("Session get ID: " + session.getId());
+
+	    	 if (session != null && session.getId() != null) {
+	                //session.invalidate();
+	    		// session = AuthRequest.getSession(true); 
+	            }
+	    	
+	    	 
+ 
+	        Authentication authentication = authenticationManager.authenticate(
+	                new UsernamePasswordAuthenticationToken(
+	                        authRequest.getUsername(),
+	                        authRequest.getPassword()
+	                )
+	        );
+	      //  SecurityContextHolder.getContext().setAuthentication(authentication);
+	     //   SecurityContext context = securityContextHolderStrategy.createEmptyContext();
+	     //   context.setAuthentication(authentication);
+	        
+
+	        
+	        String sessionId = session.getId();
+	        
+	        System.out.println("------------" );
+	        System.out.println(""+sessionId );
+	        System.out.println("-------------" );
+
+	       return ResponseEntity.ok().body(Map.of("sessionId", sessionId, "message", "Login successful"));
+	    } catch (AuthenticationException e) {
+	    	e.printStackTrace();
+	        // If login fails, return a JSON response with an error message
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                             .body(Map.of("error", "Invalid username or password"));
+	    }
+	}
+
+	
+	*/
+	
+	
 
 	@GetMapping("/home")
 	public String handerWelcome() {
@@ -88,7 +172,41 @@ public class ContentController {
 	private
 	RoleRepository  roleRepository;
 	
-
+	
+	 @GetMapping("/logout")
+	    public void logout(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	        // Invalidate the session
+	        HttpSession session = request.getSession(false);
+	        if (session != null) {
+	            session.invalidate();
+	        }
+	        session=null;
+	        // Clear cookies
+	        Cookie cookie = new Cookie("JSESSIONID", "");
+	        cookie.setMaxAge(0);
+	        cookie.setPath("/");
+	        response.addCookie(cookie);
+	        
+	        // Optionally, redirect to the login page
+	        response.setStatus(HttpServletResponse.SC_OK);
+	        response.sendRedirect("/adnya/login?logout");
+	    }
+	
+	
+	
+	@GetMapping("/test/roles")
+    public Map<String, Object> getRoles(Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+        if (authentication != null) {
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            response.put("roles", authorities.stream()
+                                             .map(GrantedAuthority::getAuthority)
+                                             .collect(Collectors.toList()));
+        } else {
+            response.put("roles", "No roles found");
+        }
+        return response;
+    }
 	
 	@PostMapping("/register/user")
 	 @Transactional
@@ -109,7 +227,7 @@ public class ContentController {
 		 role = (Set<Role>) roleRepository.findByRole("ROLE_ADMIN");
 		else if(user.getRole_name().equals("SUPER"))
 			 role = (Set<Role>) roleRepository.findByRole("ROLE_SUPER");
-		else role = (Set<Role>) roleRepository.findByRole("ROLE_USER");
+		else role = (Set<Role>) roleRepository.findByRole("USER");
 		//user = new MyUser();
 		user.setMob(user.getMob());
 		user.setUsername(user.getUsername());
@@ -166,9 +284,9 @@ public class ContentController {
 		//return null;
 	 return myUserRepository.findByUsername(usr);
    }
-	
-	  @GetMapping("/patient/search")
-	    public List<Patient> searchPatients(
+	 //@CrossOrigin(origins = "http://192.168.1.114:8081")
+	  @GetMapping("/patient/search1")
+	    public List<Patient> searchPatients1(
 	            @RequestParam(required = false) String firstName,
 	            @RequestParam(required = false) String lastName,
 	            @RequestParam(required = false) String gender,
@@ -176,10 +294,23 @@ public class ContentController {
 	            @RequestParam(required = false) String email
 	    ) {
 	       Specification sp= PatientDetailService.searchPatients(firstName, lastName, gender, contactNumber, email);
-		  return patientRepository.findAll(sp);
+		   return patientRepository.findAll(sp);
+	      // List<Patient> patients = patientRepository.findAll(sp);
+	      // return ResponseEntity.ok(patients); // Ensure JSON response
 	  }
 	
-	
+	  @GetMapping("/patient/search")
+	    public ResponseEntity<List<Patient>> searchPatients(
+	            @RequestParam(required = false) String firstName,
+	            @RequestParam(required = false) String lastName,
+	            @RequestParam(required = false) String gender,
+	            @RequestParam(required = false) String contactNumber,
+	            @RequestParam(required = false) String email
+	    ) {
+	        Specification<Patient> spec = PatientDetailService.searchPatients(firstName, lastName, gender, contactNumber, email);
+	        List<Patient> patients = patientRepository.findAll(spec);
+	        return ResponseEntity.ok(patients); // Ensure JSON response
+	    }
 	
 	
 	
@@ -197,6 +328,8 @@ public class ContentController {
 	
 	private final SecurityContextHolderStrategy 
 	securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+
+	
 	
 	
 	
@@ -227,39 +360,6 @@ public class ContentController {
 	}
 
 	*/
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
-	    try {
-	        Authentication authentication = authenticationManager.authenticate(
-	                new UsernamePasswordAuthenticationToken(
-	                        authRequest.getUsername(),
-	                        authRequest.getPassword()
-	                )
-	        );
-	        SecurityContextHolder.getContext().setAuthentication(authentication);
-	        SecurityContext context = securityContextHolderStrategy.createEmptyContext();
-	        context.setAuthentication(authentication);
-	        
-	        // myUserRepository.saveContext(context, authRequest);
-
-	        // Generate JWT token
-	     //   String token =jwttp.generateToken(authentication);
-			
-
-	        // Return token in the response
-		//	System.out.println("bbbbbbbbbbb_____"+token);
-	       // return ResponseEntity.ok().body(Map.of("token", token, "message", "Login successful"));
-
-	        
-	        // If login is successful, return a JSON response
-	       return ResponseEntity.ok().body(Map.of("message", "Login successful"));
-	    } catch (AuthenticationException e) {
-	    	e.printStackTrace();
-	        // If login fails, return a JSON response with an error message
-	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                             .body(Map.of("error", "Invalid username or password"));
-	    }
-	}
 
 	
 	

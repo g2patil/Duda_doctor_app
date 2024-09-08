@@ -1,9 +1,7 @@
 package model;
 
 
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,67 +19,67 @@ public class MyUserDetailService implements UserDetailsService {
 	private MyUserRepository repository;
 	
 	
-	 // Convert Set<Role> to a collection of SimpleGrantedAuthority
-    private Set<SimpleGrantedAuthority> getAuthorities(MyUser user) {
-        return user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getRole()))  // Assuming Role entity has a getRole() method
-                .collect(Collectors.toSet());
-    }
-	
-    
+	 @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<MyUser> user = repository.findByUsername(username);
+        
+        if (user.isPresent()) {
+            var userObj = user.get();
+            
+            // Convert roles to authorities (with "ROLE_" prefix if necessary)
+            var authorities = userObj.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(formatRole(role.getRole()))) // Prefix with "ROLE_"
+                .collect(Collectors.toList());
 
+            // Log authorities for debugging
+            System.out.println("Authorities: " + authorities);
+            System.out.println("Roles: " + userObj.getRole_name());
+            
+            return User.builder()
+                    .username(userObj.getUsername())
+                    .password(userObj.getPassword())
+                    .authorities(authorities)  // Use authorities instead of roles()
+                    .build();
+        } else {
+            throw new UsernameNotFoundException("User not found: " + username);
+        }
+    }
+
+    
+    
+    
+    /*	
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<MyUser> user = repository.findByUsername(username);
         if (user.isPresent()) {
             var userObj = user.get();
+            var authorities = userObj.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority("" + role.getRole()))
+                .collect(Collectors.toList());
+            
+            // Log authorities for debugging
+            System.out.println("Authorities: " + authorities);
+            System.out.println("o roles: " + userObj.getRole_name());
+           // System.out.println("1 roles: " + userObj.getRoles().toString());
+            
             return User.builder()
                     .username(userObj.getUsername())
                     .password(userObj.getPassword())
-                    .authorities(userObj.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority(formatRole(role.getRole())))
-                        .collect(Collectors.toList()))
+                    .roles(userObj.getRole_name())
+                    .authorities(authorities)
                     .build();
         } else {
             throw new UsernameNotFoundException(username);
         }
-    }
+    }   
 
+   
+*/
     // Helper method to format roles correctly
     private String formatRole(String role) {
         return role.startsWith("ROLE_") ? role : "ROLE_" + role;
-    }    
-	
-/*	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		// TODO Auto-generated method stub
-		Optional<MyUser> user=repository.findByUsername(username);
-		if(user.isPresent())
-		{
-			var userObj=user.get();  
-			return  User.builder()
-					.username(userObj.getUsername())
-					.password(userObj.getPassword())
-					//.roles(get_Roles(userObj.))
-					.build();
-		
-		}
-		else {
-			throw new UsernameNotFoundException(username);
-		}
-		//return null;
-	
-	}
-	*/
-	  private String[] get_Roles(MyUser user) {
-	        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-	            return new String[]{"USER"}; // Default role
-	        }
-	        // Convert Set<Role> to String array of role names
-	        return user.getRoles().stream()
-	                .map(Role::getRole) // Assuming Role entity has a getName() method
-	                .toArray(String[]::new);
-	    }
+    }
 	
 	
 	
