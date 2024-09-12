@@ -1,5 +1,45 @@
 package com.Duda_doctor_app;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import jakarta.servlet.SessionCookieConfig;
 
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+  /*  @Bean
+    public ServletContextInitializer initializer() {
+        return servletContext -> {
+            SessionCookieConfig session = servletContext.getSessionCookieConfig();
+            session.setName("JSESSIONID");
+            session.setPath("/");
+            session.setDomain("/");//("http://192.168.1.114:8082"); // or your domain or IP
+            session.setSecure(false); // use true for HTTPS
+            session.setHttpOnly(true);
+            session.setMaxAge(1800); // 30 minutes
+        };
+    }*/
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins(
+                "http://192.168.1.114:8081",
+                "http://localhost:8081",
+                "http://localhost:3000",
+                "http://10.0.2.2:3000"
+            )
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+    }
+}
+
+
+
+/*
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.context.annotation.Bean;
@@ -36,4 +76,4 @@ public class WebConfig implements WebMvcConfigurer {
     
 }
 
-
+*/

@@ -27,6 +27,7 @@ public class OPD {
     private String treatmentPlan;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private double feesAmount;
     
     @PrePersist
     protected void onCreate() {
@@ -108,5 +109,14 @@ public class OPD {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+	public double getFeesAmount() {
+		return feesAmount;
+	}
+
+	public void setFeesAmount(double feesAmount) {
+		this.feesAmount = feesAmount;
+	}
+    
 }
 

@@ -54,9 +54,9 @@ public class SecurityConf {
 	            )
 	            
 	            .authorizeHttpRequests(authz -> authz
-	                .requestMatchers("/adnya/home", "/adnya/login", "/adnya/users/find/**", "/adnya/cust").permitAll() // Public endpoints
-	                .requestMatchers("/adnya/patient/search", "/adnya/users", "/register/patient").hasRole("USER") // USER role required
-	                .requestMatchers("/adnya/admin/home").hasRole("SUPER") // SUPER role required
+	               // .requestMatchers("/adnya/home", "/adnya/login", "/adnya/users/find/**", "/adnya/cust").permitAll() // Public endpoints
+	                .requestMatchers("/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
+	                .requestMatchers("/adnya/admin/home", "/adnya/users").hasRole("SUPER") // SUPER role required
 	                .requestMatchers("/adnya/login", "/adnya/logout").permitAll() // Allow access to login and logout
 	                .anyRequest().authenticated() // All other requests require authentication
 	            )
@@ -70,42 +70,20 @@ public class SecurityConf {
 	            .build();
 	    }
 
-	    /*
-	    
-	    @Bean
-	    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	        return	http
-     .csrf(csrf -> csrf.disable())
-	            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Use the renamed bean
-	            .sessionManagement(session -> session
-	                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Configure session management
-	                   // .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-	            		)
-	              .authorizeHttpRequests(authz -> authz
-	               // .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-	                .requestMatchers("/adnya/home","/adnya/login","/adnya/users/find/**",  "/adnya/cust").permitAll()
-	                .requestMatchers( "/adnya/patient/search","/adnya/users","/register/patient").hasRole("USER")
-	               // .requestMatchers("/adnya/patient/search").hasAuthority("USER")
-	                .requestMatchers("/adnya/admin/home").hasRole("SUPER")
-	                .requestMatchers("/adnya/login", "/adnya/logout").permitAll()
-	                .anyRequest().authenticated()
-	                
-	            )
-	            .formLogin(formLogin -> formLogin.permitAll())
-	            .logout(logout -> logout
-	                .logoutUrl("/adnya/logout")
-	                .deleteCookies("JSESSIONID") // Optional: Delete cookies if necessary
-	                .permitAll()
-	                
-	            )
-	            .build();
-	    }
-*/
 	    
 	    @Bean
 	    public CorsConfigurationSource corsConfigurationSource() {
 	        CorsConfiguration configuration = new CorsConfiguration();
-	        configuration.setAllowedOrigins(Collections.singletonList("http://10.0.2.2:3000")); // Adjust this URL as needed
+	     //   configuration.setAllowedOrigins(Collections.singletonList()); // Adjust this URL as needed
+	        configuration.setAllowedOrigins(Arrays.asList(
+	                "http://192.168.1.114:8081",
+	                "http://localhost:8081",
+	                "http://localhost:3000",
+	                "http://10.0.2.2:3000",
+	                "http://192.168.1.114:8082"
+	            ));
+	        
+	        
 	        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
 	        configuration.setAllowCredentials(true); // Allow credentials (e.g., cookies)
 	        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept")); // Allow headers as needed

@@ -57,11 +57,36 @@ import service.PatientDetailService;
 @RequestMapping("/adnya")
 public class ContentController {
 	
+	@Autowired
+	private bldgRepository BldgRepository;
+	
+	@Autowired
+	private MyUserRepository myUserRepository;
+	
+	@Autowired
+	private OPDRepository opdRepository;
+		
+	@Autowired
+	private PasswordEncoder  passwordEncoder;
+	
+	@Autowired
+	private
+	PatientRepository  patientRepository;
+	
+	@Autowired
+	private
+	MyUserDetailService  userService;
+	
+	@Autowired
+	private
+	RoleRepository  roleRepository;
+	
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest, HttpServletRequest request) {
+	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest, HttpServletRequest request, HttpServletResponse response) {
 	    HttpSession session = request.getSession(true); // Ensure session is created if not exists
 
 	    try {
+	    	//  Cookie cookie = new Cookie("JSESSIONID",null);
 	        System.out.println("Session ID: " + session.getId());
 
 	        Authentication authentication = authenticationManager.authenticate(
@@ -76,6 +101,10 @@ public class ContentController {
 
 	        String sessionId = session.getId();
 	        
+	        
+	        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+
+ 
 	        System.out.println("Session ID after authentication: " + sessionId);
 
 	        return ResponseEntity.ok().body(Map.of("sessionId", sessionId, "message", "Login successful"));
@@ -86,50 +115,7 @@ public class ContentController {
 	    }
 	}
 
-	
-/*
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest,HttpSession session) {
-	    try {
-	    	System.out.println("Session ID: " + session);
-	    	System.out.println("Session get ID: " + session.getId());
 
-	    	 if (session != null && session.getId() != null) {
-	                //session.invalidate();
-	    		// session = AuthRequest.getSession(true); 
-	            }
-	    	
-	    	 
- 
-	        Authentication authentication = authenticationManager.authenticate(
-	                new UsernamePasswordAuthenticationToken(
-	                        authRequest.getUsername(),
-	                        authRequest.getPassword()
-	                )
-	        );
-	      //  SecurityContextHolder.getContext().setAuthentication(authentication);
-	     //   SecurityContext context = securityContextHolderStrategy.createEmptyContext();
-	     //   context.setAuthentication(authentication);
-	        
-
-	        
-	        String sessionId = session.getId();
-	        
-	        System.out.println("------------" );
-	        System.out.println(""+sessionId );
-	        System.out.println("-------------" );
-
-	       return ResponseEntity.ok().body(Map.of("sessionId", sessionId, "message", "Login successful"));
-	    } catch (AuthenticationException e) {
-	    	e.printStackTrace();
-	        // If login fails, return a JSON response with an error message
-	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                             .body(Map.of("error", "Invalid username or password"));
-	    }
-	}
-
-	
-	*/
 	
 	
 
@@ -147,30 +133,7 @@ public class ContentController {
 	public String handeruserWelcome() {
 		return "User Home";
 	}
-	@Autowired
-	private bldgRepository BldgRepository;
-	
-	@Autowired
-	private MyUserRepository myUserRepository;
-	
-	@Autowired
-	private OPDRepository opdRepository;
-	
-	
-	@Autowired
-	private PasswordEncoder  passwordEncoder;
-	
-	@Autowired
-	private
-	PatientRepository  patientRepository;
-	
-	@Autowired
-	private
-	MyUserDetailService  userService;
-	
-	@Autowired
-	private
-	RoleRepository  roleRepository;
+
 	
 	
 	 @GetMapping("/logout")
