@@ -5,6 +5,7 @@ import repository.OPDRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -41,4 +42,15 @@ public class OPDService {
     public void deleteOPD(UUID opdId) {
         opdRepository.deleteById(opdId);
     }
+    
+    
+    public List<OPD> getOPDRecords(int patientId, int doctorId) {
+        // Using the derived query method
+        return opdRepository.findByPatientIdAndDoctorId(patientId, doctorId);
+        
+        // Alternatively, using the custom query method
+        // return opdRepository.findByPatientIdAndDoctorIdCustom(patientId, doctorId);
+    }
+    
+    
 }

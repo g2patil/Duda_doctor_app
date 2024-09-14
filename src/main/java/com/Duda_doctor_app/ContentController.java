@@ -1,6 +1,8 @@
 package com.Duda_doctor_app;
 
 import java.io.IOException;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,8 +15,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,6 +53,7 @@ import repository.OPDRepository;
 import repository.PatientRepository;
 import repository.RoleRepository;
 import service.JwtTokenProvider;
+import service.OPDService;
 import service.PatientDetailService;
 
 
@@ -80,6 +85,45 @@ public class ContentController {
 	@Autowired
 	private
 	RoleRepository  roleRepository;
+	
+	@Autowired
+	private OPDService oPDService;
+	
+	@GetMapping("/opd/history1/{patientId}")
+	public ResponseEntity<List<OPD>> getPatientOpdHistory(@PathVariable Integer patientId) {
+	    List<OPD> opdHistory = opdRepository.findByPatientId(patientId);
+	    if (opdHistory.isEmpty()) {
+	        return ResponseEntity.noContent().build();
+	    }
+	    return ResponseEntity.ok(opdHistory);
+	}
+	
+	@GetMapping("/opd/history/{patientId}/{doctorId}")
+	public List<OPD> getOPDRecords(
+	        @PathVariable int patientId, 
+	        @PathVariable int doctorId) {
+	    return oPDService.getOPDRecords(patientId, doctorId);
+	}
+
+	
+	
+	
+    @GetMapping("/opd/search")
+    public ResponseEntity<List<OPD>> searchOpdByVisitDate(
+    		@RequestParam("doctorid") int doctorid,
+            @RequestParam("fromDate") String fromDate,
+            @RequestParam("toDate") String toDate) {
+
+        // Convert string dates to LocalDate
+        LocalDate startDate = LocalDate.parse(fromDate);
+        LocalDate endDate = LocalDate.parse(toDate);
+        List<OPD> opdList =opdRepository.findBydoctoridAndVisitDateBetween(doctorid,startDate, endDate);
+
+        // Query OPD records by date range
+        //List<OPD> opdList = opdRepository.findByVisitDateBetween(startDate, endDate);
+
+        return ResponseEntity.ok(opdList);
+    }
 	
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest, HttpServletRequest request, HttpServletResponse response) {

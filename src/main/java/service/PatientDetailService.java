@@ -27,7 +27,7 @@ public class PatientDetailService {
     }
 
     // Get a patient by ID
-    public Optional<Patient> getPatientById(Integer patientId) {
+    public  Optional<Patient> getPatientById(Integer patientId) {
         return patientRepository.findById(patientId);
     }
 

@@ -21,7 +21,16 @@ public class OPD {
 
     private int patientId;
     private int doctorId;
-    private LocalDate visitDate;
+    private int doctorid;
+    public int getDoctorid() {
+		return doctorid;
+	}
+
+	public void setDoctorid(int doctorid) {
+		this.doctorid = doctorid;
+	}
+
+	private LocalDate visitDate;
     private String reasonForVisit;
     private String findings;
     private String treatmentPlan;
