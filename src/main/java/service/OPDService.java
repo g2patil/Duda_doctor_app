@@ -1,6 +1,7 @@
 package service;
 
 import model.OPD;
+import model.Prescription;
 import repository.OPDRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,13 @@ public class OPDService {
         
         // Alternatively, using the custom query method
         // return opdRepository.findByPatientIdAndDoctorIdCustom(patientId, doctorId);
+    }
+    
+    public OPD createOpdWithPrescriptions(OPD opd) {
+        for (Prescription prescription : opd.getPrescriptions()) {
+            prescription.setOpd(opd);  // Set the OPD reference in the prescription
+        }
+        return opdRepository.save(opd);
     }
     
     

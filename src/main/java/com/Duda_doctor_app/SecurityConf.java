@@ -55,7 +55,7 @@ public class SecurityConf {
 	            
 	            .authorizeHttpRequests(authz -> authz
 	               // .requestMatchers("/adnya/home", "/adnya/login", "/adnya/users/find/**", "/adnya/cust").permitAll() // Public endpoints
-	                .requestMatchers("/adnya/opd/history/**","/opd/search","/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
+	                .requestMatchers("/med/search","/adnya/opd/history/**","/opd/search","/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
 	                .requestMatchers("/adnya/admin/home", "/adnya/users").hasRole("SUPER") // SUPER role required
 	                .requestMatchers("/adnya/login", "/adnya/logout").permitAll() // Allow access to login and logout
 	                .anyRequest().authenticated() // All other requests require authentication
@@ -79,7 +79,7 @@ public class SecurityConf {
 	                "http://192.168.1.114:8081",
 	                "http://localhost:8081",
 	                "http://localhost:3000",
-	                "http://10.0.2.2:3000",
+	                "http://10.0.2.2:8081",
 	                "http://192.168.1.114:8082"
 	            ));
 	        

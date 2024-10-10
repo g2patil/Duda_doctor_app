@@ -41,6 +41,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
+import model.Medicine;
 import model.MyUser;
 import model.MyUserDetailService;
 import model.MyUserRepository;
@@ -53,6 +54,7 @@ import repository.OPDRepository;
 import repository.PatientRepository;
 import repository.RoleRepository;
 import service.JwtTokenProvider;
+import service.MedicineService;
 import service.OPDService;
 import service.PatientDetailService;
 
@@ -105,7 +107,23 @@ public class ContentController {
 	    return oPDService.getOPDRecords(patientId, doctorId);
 	}
 
-	
+
+
+	    @Autowired
+	    private MedicineService medicineService;
+
+	    // GET request to search for medicines by name
+	  /*  @GetMapping("/med/search")
+	    public ResponseEntity<List<Medicine>> searchMedicinesByName(@RequestParam("name") String name) {
+	        List<Medicine> medicines = medicineService.searchByName(name);
+	        return ResponseEntity.ok(medicines);
+	    }*/
+	    
+	    @GetMapping("/med/search")
+	    public ResponseEntity<List<String>> searchMedicinesByName(@RequestParam("name") String name) {
+	        List<String> medicineNames = medicineService.searchMedicineNamesByName(name);
+	        return ResponseEntity.ok(medicineNames);
+	    }
 	
 	
     @GetMapping("/opd/search")
@@ -271,12 +289,20 @@ public class ContentController {
 				return patientRepository.save(patient);
 	
 }		
-	@PostMapping("/register/opd")
+	/*@PostMapping("/register/opd")
 	public OPD createOpd(@RequestBody OPD opd){
 		
 				return opdRepository.save(opd);
 	
-}	
+}	*/
+	 @Autowired
+	    private OPDService opdService;
+	@PostMapping("/register/opd")
+    public ResponseEntity<OPD> createOpd(@RequestBody OPD opd) {
+        OPD createdOpd = opdService.createOpdWithPrescriptions(opd);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOpd);
+    }
+	
 	
 	
 	

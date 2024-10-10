@@ -3,9 +3,17 @@ package model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -15,6 +23,22 @@ import jakarta.persistence.UniqueConstraint;
     @UniqueConstraint(columnNames = {"patientId", "visitDate"})
 })
 public class OPD {
+	
+	@OneToMany(mappedBy = "opd", cascade = CascadeType.ALL)
+	//@JsonIgnore
+	//private List<Prescription> prescriptions = new ArrayList<>();
+	@JsonManagedReference
+    private List<Prescription> prescriptions;
+	// Modify the setters and getters
+	public List<Prescription> getPrescriptions() {
+	    return prescriptions;
+	}
+
+	public void setPrescriptions(List<Prescription> prescriptions) {
+	    this.prescriptions = prescriptions;
+	}
+	
+	
     @Id
     @GeneratedValue
     private int opdId;
