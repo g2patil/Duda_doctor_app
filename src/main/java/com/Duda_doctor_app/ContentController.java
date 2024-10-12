@@ -41,6 +41,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
+import model.DoctorInfo;
 import model.Medicine;
 import model.MyUser;
 import model.MyUserDetailService;
@@ -53,6 +54,7 @@ import model.bldgRepository;
 import repository.OPDRepository;
 import repository.PatientRepository;
 import repository.RoleRepository;
+import service.DoctorService;
 import service.JwtTokenProvider;
 import service.MedicineService;
 import service.OPDService;
@@ -106,7 +108,14 @@ public class ContentController {
 	        @PathVariable int doctorId) {
 	    return oPDService.getOPDRecords(patientId, doctorId);
 	}
+	
+	@Autowired
+    private DoctorService doctorService;
 
+    @GetMapping("/search/doctor")
+    public DoctorInfo searchDoctor(@RequestParam("doctor_id") Long doctorId) {
+        return doctorService.findDoctorById(doctorId);
+    }
 
 
 	    @Autowired
