@@ -1,8 +1,10 @@
 package com.Duda_doctor_app;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -42,6 +45,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import model.DoctorInfo;
+import model.ExamDiffLevel;
+import model.ExamMTopic;
+import model.ExamQuestion;
+import model.ExamSTopic;
 import model.Medicine;
 import model.MyUser;
 import model.MyUserDetailService;
@@ -51,10 +58,16 @@ import model.Patient;
 import model.Role;
 import model.bldg;
 import model.bldgRepository;
+import repository.ExamDiffLevelRepository;
+import repository.ExamMTopicRepository;
+import repository.ExamQuestionRepository;
+import repository.ExamSTopicRepository;
 import repository.OPDRepository;
 import repository.PatientRepository;
 import repository.RoleRepository;
 import service.DoctorService;
+import service.ExamMTopicService;
+import service.ExamQuestionService;
 import service.JwtTokenProvider;
 import service.MedicineService;
 import service.OPDService;
@@ -92,6 +105,251 @@ public class ContentController {
 	
 	@Autowired
 	private OPDService oPDService;
+	
+	@Autowired
+	private
+	ExamQuestionRepository  examQuestionRepository;
+	
+
+    @Autowired
+    private ExamMTopicRepository examMTopicRepository;
+
+    @Autowired
+    private ExamSTopicRepository examSTopicRepository;
+
+    @Autowired
+    private ExamDiffLevelRepository examDiffLevelRepository;
+    
+	
+	
+	 @Autowired
+	    private ExamQuestionService examQuestionService;
+	 
+	 @Autowired
+	    private ExamMTopicService examMTopicService;
+	 
+	    @GetMapping("/exam/test")
+	    public List<ExamQuestion> getRandomQuestions(
+	            @RequestParam("mainTopicId") Long mainTopicId,
+	            @RequestParam("questionCount") int questionCount) {
+	        
+	        ExamMTopic mainTopic  = examMTopicRepository.findById(mainTopicId)
+	                .orElseThrow(() -> new IllegalArgumentException("Invalid main topic ID: " + mainTopicId));
+// fetch or build your ExamMTopic object here by mainTopicId
+
+	        return examQuestionService.getRandomQuestions(mainTopic, questionCount);
+	    }
+	 
+
+	    
+	 @GetMapping("/exam/get_s_topic/{mTopicId}")
+	    public ResponseEntity<List<ExamSTopic>> getSTopicsByMTopicId(@PathVariable Long mTopicId) {
+	        List<ExamSTopic> sTopics = examSTopicRepository.findBymTopic_mTopicId(mTopicId);
+	        // Map to DTO
+	        List<ExamSTopic> sTopicDTOs = sTopics.stream()
+	        	
+	            .map(sTopic -> {
+	                ExamSTopic dto = new ExamSTopic();
+	                dto.setSTopicId(sTopic.getsTopicId());
+	                dto.setSTopicName(sTopic.getSTopicName());
+	                return dto;
+	            })
+	            .collect(Collectors.toList());
+
+	        return ResponseEntity.ok(sTopicDTOs);
+	    }
+	 
+	 @GetMapping("/exam/practise")
+	 public ResponseEntity<List<ExamQuestion>> getQuestions(
+	            @RequestParam Long mTopicId,@RequestParam Long sTopicId) {
+	        
+	        List<ExamQuestion> questions = examQuestionService.getQuestionsByTopics(mTopicId,sTopicId);
+	        return ResponseEntity.ok(questions);
+	    }
+	 
+	 
+	 
+	   
+
+	    @GetMapping("/exam/get_m_topic")
+	    public ResponseEntity<List<ExamMTopic>> getMTopics() {
+	        List<ExamMTopic> mTopics = examMTopicRepository.findAll();
+	        List<ExamMTopic> mTopicDTOs = mTopics
+	        		.stream()
+	        		.distinct()
+	        		.filter(mTopic -> mTopic.getSubTopics() != null )
+	        		.map(mTopic -> {
+	            ExamMTopic dto = new ExamMTopic();
+	            dto.setmTopicId(mTopic.getmTopicId());
+	            dto.setmTopicName(mTopic.getmTopicName());
+	            return dto;
+	        })
+	           .collect(Collectors.toList());
+	           return ResponseEntity.ok(mTopicDTOs);
+	       // return ResponseEntity.ok(dto);
+	    }
+	 
+	 
+	 
+	 
+	 
+	 @PostMapping("/exam/add_que")
+	 public ResponseEntity<?> addQuestions(@RequestBody List<ExamQuestion> questions) {
+	     List<ExamQuestion> savedQuestions = new ArrayList<>();
+	     List<String> errors = new ArrayList<>();
+
+	     for (ExamQuestion question : questions) {
+	         try {
+	             // Validate each question here if needed
+	             if (question.getQue() == null || question.getQue().isEmpty()) {
+	                 errors.add("Question cannot be empty for question: " + question);
+	                 continue; // Skip this question if invalid
+	             }
+
+	             // Optional: Check if related entities exist (mTopic, sTopic, diffLevel)
+	             if (question.getmTopic() == null || question.getsTopic() == null || question.getDiffLevel() == null) {
+	                 errors.add("mTopic, sTopic, or diffLevel cannot be null for question: " + question);
+	                 continue;
+	             }
+
+	             // Save the question to the database
+	             ExamQuestion savedQuestion = examQuestionRepository.save(question);
+	             savedQuestions.add(savedQuestion);
+	         } catch (Exception e) {
+	             errors.add("Failed to save question: " + question + ". Error: " + e.getMessage());
+	         }
+	     }
+
+	     if (!errors.isEmpty()) {
+	         // Return a bad request with error details
+	         return ResponseEntity.badRequest().body(errors);
+	     }
+
+	     // Return a success response with saved questions
+	     return ResponseEntity.ok(savedQuestions);
+	 }
+
+	 
+	 
+	
+	@PostMapping("/exam/add_que1")
+	//@PostMapping("/createQuestion")
+	public ResponseEntity<?> createQuestion(@RequestBody ExamQuestion que_d) {
+	    
+		 System.out.println("Received Question Data:");
+		// System.out.println("Received ExamQuestion: " + que_d.getmTopic().getmTopicName());
+	        System.out.println("Question ID: " + que_d.getQuestionId());
+	        System.out.println("Question: " + que_d.getQue());
+	        System.out.println("Answer A: " + que_d.getAnsA());
+	        System.out.println("Answer B: " + que_d.getAnsB());
+	        System.out.println("Answer C: " + que_d.getAnsC());
+	        System.out.println("Answer D: " + que_d.getAnsD());
+	        System.out.println("Correct Answer: " + que_d.getCorrectAnswer());
+	        System.out.println("Explanation: " + que_d.getExpln());
+	        
+	       ExamMTopic mTopic = examMTopicRepository.findById(que_d.getmTopic().getmTopicId())
+	                .orElseThrow(() -> new RuntimeException("Invalid mTopic ID"));
+	        ExamSTopic sTopic = examSTopicRepository.findById(que_d.getsTopic().getsTopicId())
+	                .orElseThrow(() -> new RuntimeException("Invalid mTopic ID"));
+	        ExamDiffLevel diffLevel = examDiffLevelRepository.findById(que_d.getDiffLevel().getDiffLevelId())
+	        	    .orElseThrow(() -> new RuntimeException("Invalid Difficulty Level ID: "));
+	       // examQuestionRepository.save(que_d);
+	        
+	        System.out.println("mTopic " + mTopic.getmTopicId());
+	        System.out.println("sTopic " + sTopic.getsTopicId());
+	        System.out.println("diffLevel " + que_d.getDiffLevel().getDiffLevelId());
+		
+	        ExamQuestion examQuestion = new ExamQuestion();
+	        examQuestion.setmTopic(mTopic);
+		    examQuestion.setsTopic(sTopic);
+		    examQuestion.setDiffLevel(diffLevel);
+		    examQuestion.setQue(que_d.getQue());
+		    examQuestion.setAnsA(que_d.getAnsA());
+		    examQuestion.setAnsB(que_d.getAnsB());
+		    examQuestion.setAnsC(que_d.getAnsC());
+		    examQuestion.setAnsD(que_d.getAnsD());
+		    examQuestion.setCorrectAnswer(que_d.getCorrectAnswer());
+		    examQuestion.setExpln(que_d.getExpln());
+		    examQuestionRepository.save(examQuestion);
+	        
+	//	ExamQuestion examQuestion = new ExamQuestion();
+	     //   examQuestionRepository.save(examQuestion);
+
+		    return ResponseEntity.ok("Question created successfully");
+	        
+	        
+	        
+	        
+	        
+
+	    /* Assuming you have a method to fetch mTopic, sTopic, and diffLevel
+	    ExamMTopic mTopic = examMTopicRepository.findById(Long.parseLong(questionDto.getSTopic().toString())).orElse(null);
+	    ExamSTopic sTopic = examSTopicRepository.findById(questionDto.getSTopic()).orElse(null);
+	    ExamDiffLevel diffLevel = examDiffLevelRepository.findById(questionDto.getDiffLevel()).orElse(null);
+
+	    if (mTopic == null || sTopic == null || diffLevel == null) {
+	        return ResponseEntity.badRequest().body("Invalid topic or difficulty level ID");
+	    }
+
+	    examQuestion.setMTopic(mTopic);
+	    examQuestion.setSTopic(sTopic);
+	    examQuestion.setDiffLevel(diffLevel);
+	    examQuestion.setQue(questionDto.getQue());
+	    examQuestion.setAnsA(questionDto.getAnsA());
+	    examQuestion.setAnsB(questionDto.getAnsB());
+	    examQuestion.setAnsC(questionDto.getAnsC());
+	    examQuestion.setAnsD(questionDto.getAnsD());
+	    examQuestion.setCorrectAnswer(questionDto.getCorrectAnswer());
+	    examQuestion.setExpln(questionDto.getExpln());
+         */
+	    // Save the question
+	    
+	}
+
+  /*  public void createQuestion(@RequestBody ExamQuestion examQuestion) {
+		ExamSTopic sTopic = examSTopicRepository.findById(1L)
+		        .orElseThrow();
+		    ExamMTopic mTopic = examMTopicRepository.findById(1L)
+			        .orElseThrow();
+		    ExamDiffLevel DiffLevel=examDiffLevelRepository.findById(1L)
+			        .orElseThrow();
+		    ExamQuestion question1 = new ExamQuestion();
+		   // question1.setSTopic(Long.parseLong(sTopic.getSTopicId().toString()));
+		  //  question1.setMTopic(Long.parseLong(mTopic.getMTopicId().toString()));
+		   // question1.setDiffLevel(Long.parseLong(DiffLevel.getDiffLevelId().toString()));
+		    
+		       System.out.println("\n\n\n"
+		       		+ "Received request with "
+		       		+ "MTopic: {}"+ examQuestion.getMTopic().toString());
+		       System.out.println("\n\n\n");
+		       examQuestionService.addQuestion(examQuestion);
+    }*/
+	
+	/*@PostMapping("/exam/add_que")
+	public ResponseEntity<?> addQuestion(@RequestBody ExamQuestion question) {
+	    ExamSTopic sTopic = examSTopicRepository.findById(1L)
+	        .orElseThrow();
+	    ExamMTopic mTopic = examMTopicRepository.findById(1L)
+		        .orElseThrow();
+	    ExamDiffLevel DiffLevel=examDiffLevelRepository.findById(1L)
+		        .orElseThrow();
+	    
+	    ExamQuestion question1 = new ExamQuestion();
+	    question1.setSTopic(sTopic.getSTopicId());
+	    question1.
+	    question1.setMTopic(mTopic.getMTopicId());
+	    question1.setDiffLevel(DiffLevel.getDiffLevelId());
+	    // Set other properties from questionDto
+	    System.out.println("------------"+sTopic.getSTopicId());
+	    examQuestionService.addQuestion(question1);
+	    return ResponseEntity.ok("Question created successfully");
+	}*/
+	
+	
+	
+	
+	
+	
 	
 	@GetMapping("/opd/history1/{patientId}")
 	public ResponseEntity<List<OPD>> getPatientOpdHistory(@PathVariable Integer patientId) {
