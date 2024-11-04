@@ -32,8 +32,8 @@ public class ExamQuestionService {
     private ExamDiffLevelRepository examDiffLevelRepository;
     
     public List<ExamQuestion> getRandomQuestions(ExamMTopic mTopic, int questionCount) {
-        int maxAllowedQuestions = 50;
-        int minAllowedQuestions = 10;
+        int maxAllowedQuestions = 120;
+        int minAllowedQuestions = 5;
 
         // Check if requested question count is less than or equal to max allowed
         if (questionCount > maxAllowedQuestions || questionCount < minAllowedQuestions) {
