@@ -55,6 +55,7 @@ import model.MyUserDetailService;
 import model.MyUserRepository;
 import model.OPD;
 import model.Patient;
+import model.QuizAttempt;
 import model.Role;
 import model.bldg;
 import model.bldgRepository;
@@ -72,6 +73,8 @@ import service.JwtTokenProvider;
 import service.MedicineService;
 import service.OPDService;
 import service.PatientDetailService;
+import service.QuizAttemptRequest;
+import service.QuizService;
 
 
 @Controller
@@ -120,13 +123,32 @@ public class ContentController {
     @Autowired
     private ExamDiffLevelRepository examDiffLevelRepository;
     
-	
+    @Autowired
+    private QuizService quizService;
 	
 	 @Autowired
 	    private ExamQuestionService examQuestionService;
 	 
 	 @Autowired
 	    private ExamMTopicService examMTopicService;
+	 
+	 @PostMapping("/quiz/saveAttempt")
+	    public ResponseEntity<QuizAttempt> saveAttempt(@RequestBody QuizAttemptRequest request) {
+	        QuizAttempt savedAttempt = quizService.saveQuizAttempt(
+	                request.getUserId(),
+	                request.getTopicId(),
+	                request.getTopicName(),
+	                request.getScore(),
+	                request.getTotalQuestions(),
+	                request.getDetails()
+	        );
+	        return ResponseEntity.ok(savedAttempt);
+	    }
+	 
+	 
+	 
+	 
+	 
 	 
 	    @GetMapping("/exam/test")
 	    public List<ExamQuestion> getRandomQuestions(

@@ -89,6 +89,7 @@ public class ExamQuestionService {
         Optional<ExamQuestion> existingQuestion = examQuestionRepository.findById(questionId);
         if (existingQuestion.isPresent()) {
             ExamQuestion examQuestion = existingQuestion.get();
+            //examQuestion.setQuestionId(examQuestionDetails.getQuestionId());
             examQuestion.setQue(examQuestionDetails.getQue());
             examQuestion.setAnsA(examQuestionDetails.getAnsA());
             examQuestion.setAnsB(examQuestionDetails.getAnsB());
