@@ -26,6 +26,9 @@ public class MyUserDetailService implements UserDetailsService {
         if (user.isPresent()) {
             var userObj = user.get();
             
+            // Debugging roles and authorities
+            System.out.println("User Roles: " + userObj.getRoles().toString());
+       
             // Convert roles to authorities (with "ROLE_" prefix if necessary)
             var authorities = userObj.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(formatRole(role.getRole()))) // Prefix with "ROLE_"

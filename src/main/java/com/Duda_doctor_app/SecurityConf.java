@@ -5,6 +5,7 @@ import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -22,9 +23,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import model.MyUserDetailService;
+import service.ClubUserDetailsService;
+import service.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
+@ComponentScan(basePackages = "service")
 //@EnableJdbcHttpSession
 public class SecurityConf {
 	
@@ -36,6 +40,20 @@ public class SecurityConf {
 		return userDetailService;
 	}
 	    
+	  @Autowired
+	    private ClubUserDetailsService clubUserDetailService;
+
+
+	  //  @Bean
+	    public UserDetailsService clubUserDetailsService() {
+	        return clubUserDetailService;  // Bean for ClubUser details
+	    }
+	    
+	  
+	  
+	  
+	  
+	  
 	    @Bean
 	    public AuthenticationManager authenticationManager(
 	                                 AuthenticationConfiguration configuration) throws Exception {
@@ -55,9 +73,10 @@ public class SecurityConf {
 	            
 	            .authorizeHttpRequests(authz -> authz
 	               // .requestMatchers("/adnya/home", "/adnya/login", "/adnya/users/find/**", "/adnya/cust").permitAll() // Public endpoints
-	                .requestMatchers("/adnya/quiz/saveAttempt","/adnya/exam/test","/adnya/exam/practise","/adnya/exam/get_s_topic/{mTopicId}","/adnya/exam/get_m_topic","/adnya/exam/add_que","/adnya/search/doctor","/med/search","/adnya/opd/history/**","/opd/search","/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
 	                .requestMatchers("/adnya/admin/home", "/adnya/users").hasRole("SUPER") // SUPER role required
-	                .requestMatchers("/adnya/login", "/adnya/logout","/adnya/register/user").permitAll() // Allow access to login and logout
+	                .requestMatchers("add_sub_activity","add_main_activity","get_sub_activity","get_main_activity","/club/rolelike","/club/change-password","/club/validate-otp","/club/generate-otp","/adnya/club/add_user").hasRole("CLUB_SUPER") // SUPER role required
+	                .requestMatchers("/adnya/club/login","/adnya/login", "/adnya/logout","/adnya/register/user").permitAll() // Allow access to login and logout
+	                .requestMatchers("/adnya/club/add_user","/adnya/quiz/saveAttempt","/adnya/exam/test","/adnya/exam/practise","/adnya/exam/get_s_topic/{mTopicId}","/adnya/exam/get_m_topic","/adnya/exam/add_que","/adnya/search/doctor","/med/search","/adnya/opd/history/**","/opd/search","/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
 	                .anyRequest().authenticated() // All other requests require authentication
 	            )
 	            .formLogin(formLogin -> formLogin.permitAll()) // Permit all access to the form login page
@@ -97,56 +116,17 @@ public class SecurityConf {
 	
 	    
 	    
-	    /*
-	    
-	    @Bean
-	    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	        return
-	    	http
-	            .csrf(csrf -> csrf.disable())
-	            .authorizeHttpRequests(authz -> authz
-	            		 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-	                .requestMatchers("/adnya/login").permitAll()
-	              //  .requestMatchers("/adnya/home").authenticated()
-	                .requestMatchers("/adnya/admin/home").hasRole("USER")
-	                .requestMatchers("/adnya/patient/search").hasRole("USER")
-	                .requestMatchers("/adnya/cust").permitAll()
-					.requestMatchers("/adnya/user/home").permitAll()
-					.requestMatchers("/adnya/login").permitAll()
-					.requestMatchers("/adnya/users").hasRole("SUPER")//.permitAll();
-					.requestMatchers("/adnya/users/find/**").permitAll()
-					.requestMatchers("/adnya/patient/find/**").permitAll()
-					.requestMatchers("/register/user").permitAll()
-					.requestMatchers("/register/patient").permitAll()
-					.requestMatchers("/adnya/register/patient").permitAll()
-					.requestMatchers("/adnya/register/opd").permitAll()
-					.requestMatchers("/adnya/register/user").permitAll()
-					.requestMatchers("/adnya/register/bldg").permitAll()
-					.requestMatchers("/adnya/home").hasRole("USER")
-					.requestMatchers("/adnya/admin/home").hasRole("SUPER")
-	                // .requestMatchers("/adnya/patient/search").hasRole("USER")
-	                //.requestMatchers("/adnya/patient/search").permitAll()
-	                .anyRequest().authenticated()
-	               
-	            )
-	         	.formLogin(formLogin ->formLogin.permitAll())
-	         	  .logout(logout -> logout
-	         	            .logoutUrl("/adnya/logout")  // URL to trigger logout
-	         	            .addLogoutHandler(customLogoutHandler)
-	         	            .logoutSuccessUrl("/adnya/login?logout")  // Redirect to login page after logout
-	         	            .invalidateHttpSession(true)  // Invalidate the session
-	         	            .deleteCookies("JSESSIONID")  // Delete the session cookie
-	         	            .permitAll()
-	         	        )
-				.build();
-	    } 
- 
-	    */
+	  
 	
 	@Bean 
 	public AuthenticationProvider authenticationProvider(){
+		 CustomUserDetailsService customUserDetailsService = new CustomUserDetailsService(userDetailService, clubUserDetailService);
+
 		DaoAuthenticationProvider provider=new DaoAuthenticationProvider();
-		provider.setUserDetailsService(userDetailService);
+		//provider.setUserDetailsService(userDetailService);
+		//provider.setUserDetailsService(clubUserDetailService);
+		 provider.setUserDetailsService(customUserDetailsService);  // Use the custom UserDetailsService
+		 
 		provider.setPasswordEncoder(passwordEncoder());
 		return provider;
 	}
@@ -157,3 +137,52 @@ public class SecurityConf {
 	}
 
 }
+
+
+
+
+/*
+
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return
+	http
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(authz -> authz
+        		 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .requestMatchers("/adnya/login").permitAll()
+          //  .requestMatchers("/adnya/home").authenticated()
+            .requestMatchers("/adnya/admin/home").hasRole("USER")
+            .requestMatchers("/adnya/patient/search").hasRole("USER")
+            .requestMatchers("/adnya/cust").permitAll()
+			.requestMatchers("/adnya/user/home").permitAll()
+			.requestMatchers("/adnya/login").permitAll()
+			.requestMatchers("/adnya/users").hasRole("SUPER")//.permitAll();
+			.requestMatchers("/adnya/users/find/**").permitAll()
+			.requestMatchers("/adnya/patient/find/**").permitAll()
+			.requestMatchers("/register/user").permitAll()
+			.requestMatchers("/register/patient").permitAll()
+			.requestMatchers("/adnya/register/patient").permitAll()
+			.requestMatchers("/adnya/register/opd").permitAll()
+			.requestMatchers("/adnya/register/user").permitAll()
+			.requestMatchers("/adnya/register/bldg").permitAll()
+			.requestMatchers("/adnya/home").hasRole("USER")
+			.requestMatchers("/adnya/admin/home").hasRole("SUPER")
+            // .requestMatchers("/adnya/patient/search").hasRole("USER")
+            //.requestMatchers("/adnya/patient/search").permitAll()
+            .anyRequest().authenticated()
+           
+        )
+     	.formLogin(formLogin ->formLogin.permitAll())
+     	  .logout(logout -> logout
+     	            .logoutUrl("/adnya/logout")  // URL to trigger logout
+     	            .addLogoutHandler(customLogoutHandler)
+     	            .logoutSuccessUrl("/adnya/login?logout")  // Redirect to login page after logout
+     	            .invalidateHttpSession(true)  // Invalidate the session
+     	            .deleteCookies("JSESSIONID")  // Delete the session cookie
+     	            .permitAll()
+     	        )
+		.build();
+} 
+
+*/

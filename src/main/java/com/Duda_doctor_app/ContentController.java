@@ -39,11 +39,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
+import model.ClubUser;
 import model.DoctorInfo;
 import model.ExamDiffLevel;
 import model.ExamMTopic;
@@ -57,8 +60,13 @@ import model.OPD;
 import model.Patient;
 import model.QuizAttempt;
 import model.Role;
+import model.RolePaidStatus;
+import model.RoleSubActivity;
 import model.bldg;
 import model.bldgRepository;
+import model.club_m_activity;
+import model.club_s_activity;
+import repository.ClubUserRepository;
 import repository.ExamDiffLevelRepository;
 import repository.ExamMTopicRepository;
 import repository.ExamQuestionRepository;
@@ -66,15 +74,21 @@ import repository.ExamSTopicRepository;
 import repository.OPDRepository;
 import repository.PatientRepository;
 import repository.RoleRepository;
+import repository.RoleSubActivityRepository;
+import repository.club_m_activityRepository;
+import repository.club_s_activityRepository;
+import service.ClubUserService;
 import service.DoctorService;
 import service.ExamMTopicService;
 import service.ExamQuestionService;
 import service.JwtTokenProvider;
 import service.MedicineService;
 import service.OPDService;
+import service.OTPService;
 import service.PatientDetailService;
 import service.QuizAttemptRequest;
 import service.QuizService;
+import service.RoleService;
 
 
 @Controller
@@ -131,6 +145,292 @@ public class ContentController {
 	 
 	 @Autowired
 	    private ExamMTopicService examMTopicService;
+	 
+	// @Autowired
+	//	   private RoleService roleService;
+	 
+/*******For Club App********/
+	 
+	 @Autowired
+	    private OTPService otpService;
+
+	    @Autowired
+	    private ClubUserRepository clubUserRepository;
+	 
+	 @Autowired
+	    private ClubUserService clubUserService;
+	 
+	 @Autowired
+	    private 
+	 RoleSubActivityRepository RoleSubActivityRepository;
+	 
+
+	 @Autowired
+	    private club_m_activityRepository club_m_activityRepository;
+
+	    @GetMapping("/club/get_main_activity")
+	    public List<club_m_activity> getAllMainActivities() {
+	        return club_m_activityRepository.findAll();
+	    }
+
+	    @PostMapping("/club/add_main_activity")
+	    public ResponseEntity<?> updateMainActivities(@RequestBody List<club_m_activity> mainActivities) {
+	        try {
+	            for (club_m_activity activity : mainActivities) {
+	                // Update each activity
+	            	club_m_activityRepository.save(activity);
+	            }
+	            return ResponseEntity.ok("Main activities updated successfully with descriptions");
+	        } catch (Exception e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating main activities");
+	        }
+	    }
+	 
+	    @Autowired
+	    private club_s_activityRepository club_s_activityRepository;
+
+	    @GetMapping("/club/get_sub_activity")
+	    public List<club_s_activity> getAllSubActivities() {
+	        return club_s_activityRepository.findAll();
+	    }
+	    
+	    /*******tmp***********/
+	    @Transactional
+	    @PostMapping("/club/add_sub_activity")
+	    public ResponseEntity<?> addSubActivity1(@RequestBody club_s_activity subActivityDTO) {
+	        // Step 1: Save the sub-activity
+	     /*   club_s_activity savedSubActivity = new club_s_activity();
+	        savedSubActivity.setName(subActivityRequest.getName());
+	        savedSubActivity.setDescription(subActivityRequest.getDescription());
+	        savedSubActivity = club_s_activityRepository.save(savedSubActivity);
+*/
+	    	  // Fetch the main activity
+	        club_m_activity mainActivity = club_m_activityRepository.findById(subActivityDTO.getId())
+	                .orElseThrow();
+
+	        // Create a new sub-activity
+	        club_s_activity subActivity = new club_s_activity();
+	        subActivity.setName(subActivityDTO.getName());
+	        subActivity.setDescription(subActivityDTO.getDescription());
+	        subActivity.setClub_m_activity(mainActivity);
+
+	        // Add and save
+	        mainActivity.getSubActivities().add(subActivity);
+	       // mainActivityRepository.save(mainActivity);
+
+	        /******************/
+	        club_s_activity savedSubActivity = club_s_activityRepository.save(subActivity);
+	        System.out.println("XXXXXXX  = "+subActivityDTO.getRolePaidStatuses());
+	        // Step 2: For each RolePaidStatus, create RoleSubActivity
+	        for (RolePaidStatus rolePaidStatus : subActivityDTO.getRolePaidStatuses()) {
+	            if (rolePaidStatus.getRoleId() == null) {
+	                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                                     .body("Role ID cannot be null.");
+	            }
+
+	            Optional<Role> optionalRole = roleRepository.findById(rolePaidStatus.getRoleId());
+	            if (optionalRole.isPresent()) {
+	                Role role = optionalRole.get();
+
+	                // Create and save RoleSubActivity
+	                RoleSubActivity roleSubActivity = new RoleSubActivity();
+	                roleSubActivity.setRole(role);
+	                roleSubActivity.setSubActivity(savedSubActivity);
+	                roleSubActivity.setPaid(rolePaidStatus.isPaid());
+	                roleSubActivity.setStartDate(LocalDate.now());
+
+	                RoleSubActivityRepository.save(roleSubActivity);
+	            } else {
+	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                                     .body("Role with ID " + rolePaidStatus.getRoleId() + " not found.");
+	            }
+	        }
+
+	        return ResponseEntity.ok("Sub-activity and Role-SubActivity links created successfully.");
+	    }
+	    /*********tmp end************/
+	    
+	    
+
+	    @PostMapping("/club/add_sub_activity1")
+	    public ResponseEntity<?> addSubActivity(@RequestBody club_s_activity subActivityDTO) {
+	        // Fetch the main activity
+	        club_m_activity mainActivity = club_m_activityRepository.findById(subActivityDTO.getId())
+	                .orElseThrow();
+
+	        // Create a new sub-activity
+	        club_s_activity subActivity = new club_s_activity();
+	        subActivity.setName(subActivityDTO.getName());
+	        subActivity.setDescription(subActivityDTO.getDescription());
+	        subActivity.setClub_m_activity(mainActivity);
+
+	        // Add and save
+	        mainActivity.getSubActivities().add(subActivity);
+	       // mainActivityRepository.save(mainActivity);
+
+	        /******************/
+	        club_s_activity savedSubActivity = club_s_activityRepository.save(subActivity);
+
+	        // Fetch roles to associate with the sub-activity
+	        List<Role> roles = roleRepository.findAll(); // Adjust query to filter roles if needed
+
+	        // Update the role_sub_activity table
+	        for (Role role : roles) {
+	            RoleSubActivity roleSubActivity = new RoleSubActivity();
+	            roleSubActivity.setRole(role);
+	            roleSubActivity.setSubActivity(savedSubActivity);
+
+	            // Set custom attributes for role_sub_activity
+	            roleSubActivity.setPaid(false); // Example: default to free, or use role-specific logic
+	            roleSubActivity.setStartDate(LocalDate.now()); // Default start date; adjust logic as needed
+
+	            RoleSubActivityRepository.save(roleSubActivity);
+	        }
+	        /****************/
+	        
+	        
+	        
+	        return ResponseEntity.ok(subActivity);
+	    }
+
+
+
+	    
+	    
+	    
+
+	    @PostMapping("/club/add_user")
+	    public ResponseEntity<ClubUser> addClubUser(@RequestBody ClubUser clubUser) {
+	    	 System.out.println("Received ClubUser: " + clubUser);
+	    	 System.out.println("Received ClubUser: {}"+ clubUser);
+	    	 
+	        	Set<Role> role =  new HashSet<>();
+	        	
+	        	 role = (Set<Role>) roleRepository.findByRole("ROLE_"+clubUser.getRole_name());
+		    		
+	        	
+	    	/*	if(clubUser.getRole_name().equals("USER"))
+	    		  role = (Set<Role>) roleRepository.findByRole("ROLE_USER");
+	    		else if(clubUser.getRole_name().equals("ADMIN"))
+	    		 role = (Set<Role>) roleRepository.findByRole("ROLE_ADMIN");
+	    		else if(clubUser.getRole_name().equals("SUPER"))
+	    			 role = (Set<Role>) roleRepository.findByRole("ROLE_SUPER");
+	    		else if(clubUser.getRole_name().equals("CLUB_SUPER"))
+	    			 role = (Set<Role>) roleRepository.findByRole("ROLE_CLUB_SUPER");
+	    		else role = (Set<Role>) roleRepository.findByRole("USER");
+	    		*///user = new MyUser();
+	    		//user.setMob(user.getMob());
+	    		///user.setUsername(user.getUsername());
+	    		//user.setPassword(passwordEncoder.encode(user.getPassword()));
+	    		clubUser.setRoles(role);
+	    	 
+	    	 
+	    	 
+	    	 
+	    	 
+	    	 
+	    	 
+	    	 clubUser.setPassword(passwordEncoder.encode(clubUser.getPassword()));
+	    	try {
+	            ClubUser savedUser = clubUserService.addClubUser(clubUser);
+	            return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+	        } catch (Exception e) {
+	            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+	        }
+	    }
+	    
+	    
+	    @PostMapping("/club/login")
+		public ResponseEntity<?> club_login(@RequestBody AuthRequest authRequest, HttpServletRequest request, HttpServletResponse response) {
+		    HttpSession session = request.getSession(true); // Ensure session is created if not exists
+
+		    try {
+		    	//  Cookie cookie = new Cookie("JSESSIONID",null);
+		        System.out.println("Session ID: " + session.getId());
+
+		        Authentication authentication = authenticationManager.authenticate(
+		                new UsernamePasswordAuthenticationToken(
+		                        authRequest.getUsername(),
+		                        authRequest.getPassword()
+		                )
+		        );
+
+		        // Set authentication in the security context
+		        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+		        String sessionId = session.getId();
+		        
+		        
+		        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+
+	 
+		        System.out.println("Session ID after authentication: " + sessionId);
+
+		        return ResponseEntity.ok().body(Map.of("sessionId", sessionId, "message", "Login successful"));
+		    } catch (AuthenticationException e) {
+		    	System.out.println("Authentication failed"+e);
+		        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+		                             .body(Map.of("error", "Invalid username or password"));
+		    }
+		}
+	    
+	 
+	    @PostMapping("/club/generate-otp")
+	    public ResponseEntity<String> generateOtp(@RequestParam String mobile) {
+	        return ResponseEntity.ok(otpService.generateOTP(mobile));
+	    }
+
+	    @PostMapping("/club/validate-otp")
+	    public ResponseEntity<String> validateOtp(@RequestParam String mobile, @RequestParam String otp) {
+	        boolean isValid = otpService.validateOTP(mobile, otp);
+	        if (isValid) {
+	            return ResponseEntity.ok("OTP validated successfully");
+	        } else {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP");
+	        }
+	    }
+
+	    @PostMapping("/club/change-password")
+	    public ResponseEntity<String> changePassword(
+	            @RequestParam String mobile,
+	            @RequestParam String otp,
+	            @RequestParam String newPassword) {
+
+	        boolean isValid = otpService.validateOTP(mobile, otp);
+	        if (!isValid) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP");
+	        }
+
+	        ClubUser user = clubUserRepository.findByMob(mobile)
+	                .orElseThrow(() -> new RuntimeException("User not found"));
+	        user.setPassword(newPassword); // Hash the password using BCrypt
+	        user.setOtp(null); // Clear OTP
+	        clubUserRepository.save(user);
+
+	        return ResponseEntity.ok("Password changed successfully");
+	    }
+	    
+	    @GetMapping("/club/users/find/{usr}")
+		 public Optional<ClubUser> getclubUser(@PathVariable String usr) {
+			//return null;
+		 return clubUserRepository.findByUsername(usr);
+	   }	    
+	    
+	   
+
+	    @GetMapping("/club/rolelike")
+	    public ResponseEntity<List<Role>> searchRolesByRoleName(@RequestParam String name) {
+	        List<Role> roles = roleRepository.findByRoleContainingIgnoreCase(name);
+	        if (roles.isEmpty()) {
+	            return ResponseEntity.noContent().build(); // Return 204 if no roles found
+	        }
+	        return ResponseEntity.ok(roles); // Return 200 with matching roles
+	    }	    
+	    
+	    
+	    
+	    
+/*******For Club App End********/ 
 	 
 	 @PostMapping("/quiz/saveAttempt")
 	    public ResponseEntity<QuizAttempt> saveAttempt(@RequestBody QuizAttemptRequest request) {

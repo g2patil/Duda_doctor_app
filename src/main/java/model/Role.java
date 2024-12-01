@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name="role")
 public class Role {
@@ -16,7 +18,15 @@ public class Role {
 	private String role;
 
 	 @ManyToMany(mappedBy = "roles")
+	 @JsonBackReference 
 	    private Set<MyUser> users;
+	 
+	 @ManyToMany(mappedBy = "roles") // This will refer to the 'roles' field in 'ClubUser'
+	 @JsonBackReference 
+	 private Set<ClubUser> user;
+	 
+	 @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+	    private Set<RoleSubActivity> roleSubActivities = new HashSet<>();
 
 	public Role() {
 		super();
@@ -41,6 +51,30 @@ public class Role {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public Set<MyUser> getUsers() {
+		return users;
+	}
+
+	public void setUsers(Set<MyUser> users) {
+		this.users = users;
+	}
+
+	public Set<ClubUser> getUser() {
+		return user;
+	}
+
+	public void setUser(Set<ClubUser> user) {
+		this.user = user;
+	}
+
+	public Set<RoleSubActivity> getRoleSubActivities() {
+		return roleSubActivities;
+	}
+
+	public void setRoleSubActivities(Set<RoleSubActivity> roleSubActivities) {
+		this.roleSubActivities = roleSubActivities;
 	}
 
 	

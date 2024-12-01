@@ -49,6 +49,7 @@ public class ExamQuestionService {
         // Select the required number of questions
         if (questions.size() < questionCount) {
             System.out.println("Alert: Not enough questions available. Found only " + questions.size());
+           // questions.
             return questions; // Return whatever is available
         }
 
