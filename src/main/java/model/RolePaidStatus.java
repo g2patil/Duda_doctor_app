@@ -1,6 +1,10 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,9 +18,11 @@ public class RolePaidStatus {
 	    @GeneratedValue(strategy = GenerationType.IDENTITY) // Automatically generate ID for this entity
 	    private Long id;  // Primary key for the RolePaidStatus entity
 
-    @ManyToOne
+	
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_s_activity_id") // Foreign key column
-    private club_s_activity club_s_activity;  // The owning side of the relationship
+	private club_s_activity club_s_activity;  // The owning side of the relationship
 
     private String role;
     private Long roleId;

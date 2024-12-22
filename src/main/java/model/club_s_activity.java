@@ -9,7 +9,10 @@ import java.util.Set;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,6 +24,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
@@ -36,11 +40,12 @@ public class club_s_activity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    
+    @JsonIgnore /***********add for too get all sub actiity**************/
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL) 
     @JoinColumn(name = "main_activity_id", nullable = false)
     private club_m_activity club_m_activity;
     
+    @JsonManagedReference
     @OneToMany(mappedBy = "subActivity", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RoleSubActivity> roleSubActivities = new HashSet<>();
 
@@ -59,8 +64,9 @@ public class club_s_activity {
     
    // @Transient
    // private List<RolePaidStatus> rolePaidStatuses;
-    
+   // @JsonIgnore
     @OneToMany(mappedBy = "club_s_activity", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonBackReference
     private List<RolePaidStatus> rolePaidStatuses; // No @Transient here
 
     // Getters and Setters

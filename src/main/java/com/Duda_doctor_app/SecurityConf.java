@@ -74,7 +74,7 @@ public class SecurityConf {
 	            .authorizeHttpRequests(authz -> authz
 	               // .requestMatchers("/adnya/home", "/adnya/login", "/adnya/users/find/**", "/adnya/cust").permitAll() // Public endpoints
 	                .requestMatchers("/adnya/admin/home", "/adnya/users").hasRole("SUPER") // SUPER role required
-	                .requestMatchers("add_sub_activity","add_main_activity","get_sub_activity","get_main_activity","/club/rolelike","/club/change-password","/club/validate-otp","/club/generate-otp","/adnya/club/add_user").hasRole("CLUB_SUPER") // SUPER role required
+	                .requestMatchers("/club/get_sub_activitybyid/*","add_sub_activity","add_main_activity","get_sub_activity","get_main_activity","/club/rolelike","/club/change-password","/club/validate-otp","/club/generate-otp","/adnya/club/add_user").hasRole("CLUB_SUPER") // SUPER role required
 	                .requestMatchers("/adnya/club/login","/adnya/login", "/adnya/logout","/adnya/register/user").permitAll() // Allow access to login and logout
 	                .requestMatchers("/adnya/club/add_user","/adnya/quiz/saveAttempt","/adnya/exam/test","/adnya/exam/practise","/adnya/exam/get_s_topic/{mTopicId}","/adnya/exam/get_m_topic","/adnya/exam/add_que","/adnya/search/doctor","/med/search","/adnya/opd/history/**","/opd/search","/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
 	                .anyRequest().authenticated() // All other requests require authentication

@@ -77,6 +77,7 @@ import repository.RoleRepository;
 import repository.RoleSubActivityRepository;
 import repository.club_m_activityRepository;
 import repository.club_s_activityRepository;
+import service.ClubSActivityService;
 import service.ClubUserService;
 import service.DoctorService;
 import service.ExamMTopicService;
@@ -194,17 +195,30 @@ public class ContentController {
 	        return club_s_activityRepository.findAll();
 	    }
 	    
+	    @Autowired
+	    private ClubSActivityService ClubSActivityService;
+	   
+	    @GetMapping("/club/get_sub_activitybyid/{id}")
+	    public ResponseEntity<List<club_s_activity>> getSubActivities(@PathVariable Long id) {
+	        List<club_s_activity> activities = ClubSActivityService.getSubActivities(id);
+	        return ResponseEntity.ok(activities);
+	    }
+	    /*public List<club_s_activity> getSubActivities(Long id) {
+	        return ClubSActivityService.findByMainActivityId(id);
+	    }
+	    /* 
+	    /*@GetMapping("/club/get_sub_activitybyid")
+	    public List<club_s_activity> getSubActivities(@RequestParam Long mainActivityId) {
+	        return club_s_activityRepository.findByid(mainActivityId);
+	    }*/
+
+		 
+	    
 	    /*******tmp***********/
 	    @Transactional
 	    @PostMapping("/club/add_sub_activity")
 	    public ResponseEntity<?> addSubActivity1(@RequestBody club_s_activity subActivityDTO) {
-	        // Step 1: Save the sub-activity
-	     /*   club_s_activity savedSubActivity = new club_s_activity();
-	        savedSubActivity.setName(subActivityRequest.getName());
-	        savedSubActivity.setDescription(subActivityRequest.getDescription());
-	        savedSubActivity = club_s_activityRepository.save(savedSubActivity);
-*/
-	    	  // Fetch the main activity
+	     
 	        club_m_activity mainActivity = club_m_activityRepository.findById(subActivityDTO.getId())
 	                .orElseThrow();
 
@@ -218,7 +232,7 @@ public class ContentController {
 	        mainActivity.getSubActivities().add(subActivity);
 	       // mainActivityRepository.save(mainActivity);
 
-	        /******************/
+	     
 	        club_s_activity savedSubActivity = club_s_activityRepository.save(subActivity);
 	        System.out.println("XXXXXXX  = "+subActivityDTO.getRolePaidStatuses());
 	        // Step 2: For each RolePaidStatus, create RoleSubActivity
@@ -942,8 +956,8 @@ public class ContentController {
 	 return patientRepository.findByPatientId(pst);
   }
 	
-	@Autowired
-	private JwtTokenProvider jwttp;
+	//@Autowired
+	//private JwtTokenProvider jwttp;
 	
 	@Autowired
     private AuthenticationManager authenticationManager;

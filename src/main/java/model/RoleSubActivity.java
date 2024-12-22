@@ -3,6 +3,10 @@ package model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "role_sub_activity")
 public class RoleSubActivity {
@@ -14,10 +18,18 @@ public class RoleSubActivity {
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
+    
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "sub_activity_id", nullable = false)
     private club_s_activity subActivity;
+
+
+    /*@JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "sub_activity_id", nullable = false)
+    @JsonBackReference  
+    private club_s_activity subActivity;*/
 
     @Column(nullable = false)
     private boolean isPaid; // true = Paid, false = Free

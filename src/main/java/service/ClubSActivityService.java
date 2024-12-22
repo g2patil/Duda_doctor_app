@@ -1,15 +1,17 @@
 package service;
 
-import java.time.LocalDate;
-
-import org.hibernate.mapping.List;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
-import model.Role;
-import model.RoleSubActivity;
 import model.club_s_activity;
+import repository.ClubSActivityRepository;
 import repository.RoleRepository;
 import repository.RoleSubActivityRepository;
 import repository.club_s_activityRepository;
@@ -25,6 +27,12 @@ public class ClubSActivityService {
 
     @Autowired
     private RoleSubActivityRepository roleSubActivityRepository;
+
+	private club_s_activityRepository repository;
+	
+	 @Autowired
+	    private 
+	ClubSActivityRepository clubSActivityRepository1;
 
     @Transactional
     public club_s_activity addSubActivity(club_s_activity subActivity) {
@@ -46,4 +54,18 @@ public class ClubSActivityService {
 */
         return savedSubActivity;
     }
+    
+	/*public List<club_s_activity> findByMainActivityId(Long id) {
+		// TODO Auto-generated method stub
+		//return null;
+		 return clubSActivityRepository1.findByMainActivityId(id);
+
+	}*/
+    public List<club_s_activity> getSubActivities(Long mainActivityId) {
+        return clubSActivityRepository1.findByMainActivityId(mainActivityId);
+    }
+ 
+ 
+    
+    
 }

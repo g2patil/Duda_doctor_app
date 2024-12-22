@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name="role")
@@ -18,15 +20,19 @@ public class Role {
 	private String role;
 
 	 @ManyToMany(mappedBy = "roles")
-	 @JsonBackReference 
+	// @JsonBackReference 
+	 @JsonIgnore
 	    private Set<MyUser> users;
 	 
 	 @ManyToMany(mappedBy = "roles") // This will refer to the 'roles' field in 'ClubUser'
-	 @JsonBackReference 
+	// @JsonBackReference 
+	 @JsonIgnore
 	 private Set<ClubUser> user;
 	 
-	 @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
-	    private Set<RoleSubActivity> roleSubActivities = new HashSet<>();
+	   
+	   @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+	   @JsonIgnore
+	   private Set<RoleSubActivity> roleSubActivities = new HashSet<>();
 
 	public Role() {
 		super();

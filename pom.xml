@@ -126,9 +126,14 @@
 			<artifactId>com.adnya.g2</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
-		
-	</dependencies>
 
+	<!--	<dependency>
+			<groupId>com.Adnya_bldg_rent_app</groupId>
+			<artifactId>com.Adnya_bldg_rent_app.g2</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency> -->
+	</dependencies>
+ 
 	<build>
 		<plugins>
 			<plugin>

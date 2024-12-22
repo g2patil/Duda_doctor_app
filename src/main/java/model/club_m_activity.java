@@ -7,6 +7,7 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
@@ -31,6 +32,7 @@ public class club_m_activity {
 
     private String description;
 
+ //   @JsonBackReference // 
     @OneToMany(mappedBy = "club_m_activity", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<club_s_activity> subActivities = new ArrayList<>();

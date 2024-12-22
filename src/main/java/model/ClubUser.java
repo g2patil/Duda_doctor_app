@@ -35,7 +35,7 @@ public class ClubUser {
     private LocalDateTime deactivationDate;
     private String role_name;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "club_user_roles",
         joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"),
