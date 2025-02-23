@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,14 +32,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.adnya.Valid;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.Cookie;
@@ -48,10 +53,13 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import model.ClubUser;
 import model.DoctorInfo;
+import model.EmployeeRoster;
 import model.ExamDiffLevel;
 import model.ExamMTopic;
 import model.ExamQuestion;
 import model.ExamSTopic;
+import model.Institute;
+import model.MaharashtraReservation;
 import model.Medicine;
 import model.MyUser;
 import model.MyUserDetailService;
@@ -62,6 +70,7 @@ import model.QuizAttempt;
 import model.Role;
 import model.RolePaidStatus;
 import model.RoleSubActivity;
+import model.School;
 import model.bldg;
 import model.bldgRepository;
 import model.club_m_activity;
@@ -71,18 +80,23 @@ import repository.ExamDiffLevelRepository;
 import repository.ExamMTopicRepository;
 import repository.ExamQuestionRepository;
 import repository.ExamSTopicRepository;
+import repository.InstituteRepository;
 import repository.OPDRepository;
 import repository.PatientRepository;
 import repository.RoleRepository;
 import repository.RoleSubActivityRepository;
+import repository.SchoolRepository;
 import repository.club_m_activityRepository;
 import repository.club_s_activityRepository;
 import service.ClubSActivityService;
 import service.ClubUserService;
 import service.DoctorService;
+import service.EmployeeRosterService;
 import service.ExamMTopicService;
 import service.ExamQuestionService;
+import service.InstituteService;
 import service.JwtTokenProvider;
+import service.MaharashtraReservationService;
 import service.MedicineService;
 import service.OPDService;
 import service.OTPService;
@@ -90,6 +104,7 @@ import service.PatientDetailService;
 import service.QuizAttemptRequest;
 import service.QuizService;
 import service.RoleService;
+import service.SchoolService;
 
 
 @Controller
@@ -149,6 +164,159 @@ public class ContentController {
 	 
 	// @Autowired
 	//	   private RoleService roleService;
+	 
+	 
+	 /************For School***************/
+	 @Autowired
+	    private InstituteService instituteService;
+
+	 
+	 // Add a new institute
+	    @PostMapping("/Institute/add")
+	    public Institute addInstitute(@RequestBody Institute institute) {
+	        return instituteService.addInstitute(institute);
+	    }
+
+	    // Get all institutes
+	    @GetMapping("/Institute/all")
+	    public List<Institute> getAllInstitutes() {
+	        return instituteService.getAllInstitutes();
+	    }	 
+	 
+	    @Autowired
+	    private SchoolService schoolService;
+
+	    @PostMapping("/School/add")
+	    public ResponseEntity<?> addSchool(@RequestBody @Valid School school, BindingResult bindingResult) {
+	        // Check for validation errors
+	        if (bindingResult.hasErrors()) {
+	            // If there are validation errors, return 400 Bad Request
+	            String errorMessages = bindingResult.getAllErrors().stream()
+	                .map(ObjectError::getDefaultMessage)
+	                .collect(Collectors.joining(", "));
+	            return ResponseEntity.badRequest().body("Validation failed: " + errorMessages);
+	        }
+
+	        try {
+	            // Save the school via the service layer
+	            School savedSchool = schoolService.addSchool(school);
+
+	            // Return 201 Created response with the saved school data
+	            return new ResponseEntity<>(savedSchool, HttpStatus.CREATED);
+
+	        } catch (Exception e) {
+	            // Handle unexpected errors (e.g., Institute not found)
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error creating school: " + e.getMessage());
+	        }
+	    }
+	    
+	    @Autowired
+	    private EmployeeRosterService employeeRosterService;
+
+	    @Autowired
+	    private InstituteRepository instituteRepository;
+
+	    @Autowired
+	    private SchoolRepository schoolRepository;
+	    
+	 
+
+	    @GetMapping("/EmployeeRoster/summary")
+	    public ResponseEntity<List<Map<String, Object>>> getReservationSummary() {
+	        return ResponseEntity.ok(employeeRosterService.getReservationSummary());
+	    }
+	    
+	    
+	    @PostMapping("/EmployeeRoster/add")
+	    public ResponseEntity<EmployeeRoster> addEmployeeRoster(@RequestBody EmployeeRoster employeeRoster) {
+	        try {
+	            // Fetch Institute and School from their IDs
+	            Institute institute = instituteRepository.findById(employeeRoster.getInstitute().getId())
+	                    .orElseThrow(() -> new RuntimeException("Institute not found"));
+	            School school = schoolRepository.findById(employeeRoster.getSchool().getId())
+	                    .orElseThrow(() -> new RuntimeException("School not found"));
+
+	            // Set the Institute and School in the EmployeeRoster
+	            employeeRoster.setInstitute(institute);
+	            employeeRoster.setSchool(school);
+	            employeeRoster.setCreatedAt(LocalDate.now());
+
+	            // Save the EmployeeRoster entity
+	            EmployeeRoster savedEmployeeRoster = employeeRosterService.addEmployeeRoster(employeeRoster);
+
+	            return new ResponseEntity<>(savedEmployeeRoster, HttpStatus.CREATED);
+	        } catch (Exception e) {
+	        	e.printStackTrace(); // Logs the error in the console
+	            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+	        }
+	    }
+	    
+	    @Autowired
+	    private MaharashtraReservationService service;
+
+	    // Add Category
+	    @PostMapping("/resv/add")
+	    public ResponseEntity<List<MaharashtraReservation>> addCategories(@RequestBody List<MaharashtraReservation> reservations) {
+	        List<MaharashtraReservation> savedReservations = service.addCategories(reservations);
+	        return ResponseEntity.ok(savedReservations);
+	    }
+
+	    // Get All Categories
+	    @GetMapping("/resv/all")
+	    public ResponseEntity<List<MaharashtraReservation>> getAllCategories() {
+	        List<MaharashtraReservation> categories = service.getAllCategories();
+	        return ResponseEntity.ok(categories);
+	    }
+
+	    // Get Category by ID
+	    @GetMapping("/resv/{id}")
+	    public ResponseEntity<Optional<MaharashtraReservation>> getCategoryById(@PathVariable Long id) {
+	        Optional<MaharashtraReservation> category = service.getCategoryById(id);
+	        return ResponseEntity.ok(category);
+	    }
+
+	    // Update Category
+	    @PutMapping("/resv/update/{id}")
+	    public ResponseEntity<MaharashtraReservation> updateCategory(
+	            @PathVariable Long id,
+	            @RequestBody MaharashtraReservation updatedReservation) {
+	        MaharashtraReservation updatedCategory = service.updateCategory(id, updatedReservation);
+	        return ResponseEntity.ok(updatedCategory);
+	    }
+
+	    // Get Bindu Name by Reservation Category ID (For Dropdown)
+	    @GetMapping("/resv/bindu-name/{id}")
+	    public ResponseEntity<List<MaharashtraReservation>> getBinduNameByResvCatId(@PathVariable Long id) {
+	        List<MaharashtraReservation> binduNames = service.getBinduNameByResvCatId(id);
+	        return ResponseEntity.ok(binduNames);
+	    }
+	    
+	    @GetMapping("/EmployeeRoster/view")
+	    public List<Map<String, Object>> getEmployeeRoster() {
+	        List<Object[]> resultList = employeeRosterService.getAllEmployeeRoster();
+	        
+	        // Convert the Object[] to a List of Maps
+	        return resultList.stream().map(row -> {
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("binduId", row[0]);
+	            map.put("binduName", row[1]);
+	            map.put("employeeName", row[2]);
+	            map.put("reservationCategory", row[3]);
+	            map.put("binduNameMar", row[4]);
+	            map.put("dateOfPromotion", row[5]);
+	            map.put("dateOfAppointment", row[6]);
+	            map.put("dateOfBirth", row[7]);
+	            map.put("dateOfRetirement", row[8]);
+	            map.put("casteCertificateNumber", row[9]);
+	            map.put("casteCertificateDate", row[10]);
+	            map.put("casteCertificateIssuingAuthority", row[11]);
+	            map.put("casteValidityCertificateNumber", row[12]);
+	            map.put("casteValidityCertificateDate", row[13]);
+	            map.put("comments", row[14]);
+	            return map;
+	        }).toList();
+	    }
 	 
 /*******For Club App********/
 	 

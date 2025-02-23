@@ -18,6 +18,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -48,8 +50,15 @@ public class SecurityConf {
 	    public UserDetailsService clubUserDetailsService() {
 	        return clubUserDetailService;  // Bean for ClubUser details
 	    }
-	    
-	  
+	   
+	    @Bean
+	    public CookieSerializer cookieSerializer() {
+	    	 DefaultCookieSerializer serializer = new DefaultCookieSerializer();
+	    	    serializer.setSameSite("None");  // Lax should work for most local cases
+	    	    serializer.setUseSecureCookie(false);  // Ensure it's for HTTP (not HTTPS)
+	    	    return serializer;
+	    }
+	   
 	  
 	  
 	  
@@ -75,9 +84,10 @@ public class SecurityConf {
 	               // .requestMatchers("/adnya/home", "/adnya/login", "/adnya/users/find/**", "/adnya/cust").permitAll() // Public endpoints
 	                .requestMatchers("/adnya/admin/home", "/adnya/users").hasRole("SUPER") // SUPER role required
 	                .requestMatchers("/club/get_sub_activitybyid/*","add_sub_activity","add_main_activity","get_sub_activity","get_main_activity","/club/rolelike","/club/change-password","/club/validate-otp","/club/generate-otp","/adnya/club/add_user").hasRole("CLUB_SUPER") // SUPER role required
-	                .requestMatchers("/adnya/club/login","/adnya/login", "/adnya/logout","/adnya/register/user").permitAll() // Allow access to login and logout
-	                .requestMatchers("/adnya/club/add_user","/adnya/quiz/saveAttempt","/adnya/exam/test","/adnya/exam/practise","/adnya/exam/get_s_topic/{mTopicId}","/adnya/exam/get_m_topic","/adnya/exam/add_que","/adnya/search/doctor","/med/search","/adnya/opd/history/**","/opd/search","/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
-	                .anyRequest().authenticated() // All other requests require authentication
+	                .requestMatchers("/EmployeeRoster/summary","/EmployeeRoster/view","/resv/add","/resv/all","/adnya/EmployeeRoster/add","/adnya/club/add_user","/adnya/quiz/saveAttempt","/adnya/exam/test","/adnya/exam/practise","/adnya/exam/get_s_topic/{mTopicId}","/adnya/exam/get_m_topic","/adnya/exam/add_que","/adnya/search/doctor","/med/search","/adnya/opd/history/**","/opd/search","/register/opd","/adnya/patient/search", "/register/patient").hasRole("USER") // USER role required
+                    .requestMatchers("/EmployeeRoster/view","/adnya/EmployeeRoster/add","/School/add","/Institute/add","/Institute/all","/adnya/club/login","/adnya/login", "/adnya/logout","/adnya/register/user").permitAll() // Allow access to login and logout
+	                .anyRequest().authenticated() 
+	                // All other requests require authentication
 	            )
 	            .formLogin(formLogin -> formLogin.permitAll()) // Permit all access to the form login page
 	            .logout(logout -> logout
