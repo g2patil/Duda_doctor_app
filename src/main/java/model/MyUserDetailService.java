@@ -5,7 +5,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -46,6 +48,10 @@ public class MyUserDetailService implements UserDetailsService {
         } else {
             throw new UsernameNotFoundException("User not found: " + username);
         }
+        
+        
+        
+        
     }
 
     
@@ -83,7 +89,28 @@ public class MyUserDetailService implements UserDetailsService {
     private String formatRole(String role) {
         return role.startsWith("ROLE_") ? role : "ROLE_" + role;
     }
+   
 	
-	
-	
+    public Optional<MyUser> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            return repository.findByUsername(username); // ✅ FIXED: Now works
+        }
+
+        return Optional.empty();
+    }
+    
+    public Long getCurrentUserSchoolId() {
+        return getCurrentUser().map(MyUser::getSchool_id).orElse(null);
+    }
+
+    public Long getCurrentUserInstituteId() {
+        return getCurrentUser().map(MyUser::getInstitute_id).orElse(null);
+    }
+    
+    
+    
+    
 }

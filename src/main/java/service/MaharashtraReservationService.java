@@ -66,4 +66,9 @@ public class MaharashtraReservationService {
     public List<MaharashtraReservation> getBinduNameByResvCatId(Long resvCatId) {
         return repository.findByResvCatId(resvCatId);
     }
+    
+    
+    
+    
+    
 }

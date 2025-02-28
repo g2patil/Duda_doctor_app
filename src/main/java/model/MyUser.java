@@ -39,7 +39,24 @@ public class MyUser {
 		Role_name = role_name;
 	}
 
+	 @Column(length =10)
+	    private long institute_id;
+	 
+	 @Column(length =10)
+	    private long school_id;
 
+	public long getInstitute_id() {
+		return institute_id;
+	}
+	public void setInstitute_id(long institute_id) {
+		this.institute_id = institute_id;
+	}
+	public long getSchool_id() {
+		return school_id;
+	}
+	public void setSchool_id(long school_id) {
+		this.school_id = school_id;
+	}
 
 	@ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -77,6 +94,8 @@ public class MyUser {
 	}
 
 	
+	
+	
 	public List<MyUser> findAll() {
 		// TODO Auto-generated method stub
 		return null;
@@ -91,7 +110,15 @@ public class MyUser {
 		this.roles = roles;
 	}
 	
-
+	  public MyUser() {
+	    }
+	
+	 public MyUser(String username, String password, Long schoolId, Long instituteId) {
+	        this.username = username;
+	        this.password = password;
+	        this.school_id = schoolId;
+	        this.institute_id = instituteId;
+	    }
 	
 	
 }

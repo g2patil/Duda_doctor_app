@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.adnya.Valid;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -162,11 +163,29 @@ public class ContentController {
 	 @Autowired
 	    private ExamMTopicService examMTopicService;
 	 
+	 @Autowired
+	    private MaharashtraReservationService reservationService;
 	// @Autowired
 	//	   private RoleService roleService;
 	 
 	 
 	 /************For School***************/
+	 
+	 @GetMapping("/EmployeeRoster/inst/{instituteId}")
+	    public ResponseEntity<List<Map<String, Object>>> getEmployeeRosters(@PathVariable Long instituteId) {
+	        List<Map<String, Object>> rosterList = employeeRosterService.getAllEmployeeRosters(instituteId);
+	        return ResponseEntity.ok(rosterList);
+	    }
+
+	 
+	 @PostMapping("/EmployeeRoster/csv_upload")
+	    public ResponseEntity<String> uploadCsv(@RequestParam("file") MultipartFile file) {
+	        employeeRosterService.uploadCsv(file);
+	        return ResponseEntity.ok("File uploaded successfully!");
+	    }
+	 
+	 
+	 
 	 @Autowired
 	    private InstituteService instituteService;
 
@@ -222,9 +241,9 @@ public class ContentController {
 	    
 	 
 
-	    @GetMapping("/EmployeeRoster/summary")
-	    public ResponseEntity<List<Map<String, Object>>> getReservationSummary() {
-	        return ResponseEntity.ok(employeeRosterService.getReservationSummary());
+	    @GetMapping("/EmployeeRoster/summary/{instituteId}")
+	    public ResponseEntity<List<Map<String, Object>>> getReservationSummary(@PathVariable Long instituteId) {
+	        return ResponseEntity.ok(employeeRosterService.getReservationSummary(instituteId));
 	    }
 	    
 	    
