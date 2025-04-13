@@ -2,6 +2,9 @@ package model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDate;
 
 @Entity
@@ -15,38 +18,40 @@ public class EmployeeRoster {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "institute_id", nullable = false)
     private Institute institute;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "school_id", nullable = false)
     private School school;
 
     @Column(nullable = false, length = 100)
     private String employeeName;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDate dateOfBirth;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = true, length = 50)
     private String post;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = true, length = 50)
     private String reservationCategory;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = true, length = 100)
     private String educationQualification;
 
     @Column(length = 200)
     private String otherQualification;
 
-    @Column(nullable = false)
+    @Column()
     private LocalDate dateOfJoining;
 
-    @Column(nullable = false)
+    @Column()
     private LocalDate dateOfRetirement;
 
-    @Column(nullable = false)
+    @Column()
     private LocalDate dateOfAppointment;
 
     private LocalDate dateOfPromotion;
@@ -70,16 +75,16 @@ public class EmployeeRoster {
 
     private String comments;
 
-    @Column(nullable = false, length = 50)
+    @Column( length = 50)
     private String employeeCast;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Boolean isActive = true;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = true, length = 50)
     private String createdBy;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDate createdAt = LocalDate.now();
 
     private String updatedBy;

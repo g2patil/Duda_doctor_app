@@ -1,10 +1,16 @@
 package com.Duda_doctor_app;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,10 +23,14 @@ import java.util.stream.Collectors;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +44,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -77,6 +88,7 @@ import model.bldgRepository;
 import model.club_m_activity;
 import model.club_s_activity;
 import repository.ClubUserRepository;
+import repository.EmployeeRosterRepository;
 import repository.ExamDiffLevelRepository;
 import repository.ExamMTopicRepository;
 import repository.ExamQuestionRepository;
@@ -167,9 +179,94 @@ public class ContentController {
 	    private MaharashtraReservationService reservationService;
 	// @Autowired
 	//	   private RoleService roleService;
-	 
+	 @Autowired
+	    private EmployeeRosterRepository  employeeRosterRepository;
 	 
 	 /************For School***************/
+	 
+	 
+	 private ResponseEntity<Resource> downloadFile(String filePath, String mediaType) {
+	        try {
+	            Path file = Paths.get(filePath);
+	            Resource resource = new UrlResource(file.toUri());
+
+	            if (resource.exists() || resource.isReadable()) {
+	                return ResponseEntity.ok()
+	                        .contentType(MediaType.parseMediaType(mediaType))
+	                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+	                        .body(resource);
+	            } else {
+	                return ResponseEntity.notFound().build();
+	            }
+	        } catch (MalformedURLException e) {
+	            return ResponseEntity.internalServerError().build();
+	        }
+	    }
+	 
+	 @GetMapping("/EmployeeRoster/instructions")
+	    public ResponseEntity<Resource> getInstructions() {
+	        return downloadFile("H:\\employee_instructions.pdf", "application/pdf");
+	    }
+	 
+	 @GetMapping("/EmployeeRoster/sample_csv")
+	 public ResponseEntity<Resource> getSampleCsv() {
+	     String filename = "sample_employee.csv";
+	     Path file = Paths.get("H:\\sample_employee.csv");
+	     Resource resource;
+	     try {
+	         resource = new UrlResource(file.toUri());
+	     } catch (MalformedURLException e) {
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	     }
+
+	     return ResponseEntity.ok()
+	             .contentType(MediaType.parseMediaType("text/csv"))
+	             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+	             .body(resource);
+	 }
+
+	 
+	  @GetMapping("/EmployeeRoster/all")
+	    public List<EmployeeRoster> getAllEmployees() {
+	        return employeeRosterRepository.findAll();
+	    }
+	  
+	  @GetMapping("/EmployeeRoster/{id}")
+	    public ResponseEntity<EmployeeRoster> getEmployeeById1(@PathVariable Long id) {
+	        Optional<EmployeeRoster> employee = employeeRosterRepository.findById(id);
+	        return employee.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+	    }
+
+	    @PutMapping("/EmployeeRoster/up/{id}")
+	    public ResponseEntity<EmployeeRoster> updateEmployee1(@PathVariable Long id, @RequestBody EmployeeRoster updatedEmployee) {
+	        return employeeRosterRepository.findById(id).map(employee -> {
+	            employee.setEmployeeName(updatedEmployee.getEmployeeName());
+	            employee.setPost(updatedEmployee.getPost());
+	            employee.setEducationQualification(updatedEmployee.getEducationQualification());
+	            // Set other fields...
+	            employeeRosterRepository.save(employee);
+	            return ResponseEntity.ok(employee);
+	        }).orElseGet(() -> ResponseEntity.notFound().build());
+	    }
+	  
+	  
+	  
+	  
+	 // Update Employee
+	    @PutMapping("/EmployeeRoster/update/{id}")
+	    public ResponseEntity<EmployeeRoster> updateEmployee(@PathVariable Long id, @RequestBody EmployeeRoster updatedEmployee) {
+	        EmployeeRoster updated = employeeRosterService.updateEmployee(id, updatedEmployee);
+	        return ResponseEntity.ok(updated);
+	    }
+
+	    // Delete Employee
+	    @DeleteMapping("/EmployeeRoster/delete/{id}")
+	    public ResponseEntity<String> deleteEmployee(@PathVariable Long id) {
+	        employeeRosterService.deleteEmployee(id);
+	        return ResponseEntity.ok("Employee with ID " + id + " deleted successfully.");
+	    }
+	 
+	 
 	 
 	 @GetMapping("/EmployeeRoster/inst/{instituteId}")
 	    public ResponseEntity<List<Map<String, Object>>> getEmployeeRosters(@PathVariable Long instituteId) {
@@ -183,7 +280,78 @@ public class ContentController {
 	        employeeRosterService.uploadCsv(file);
 	        return ResponseEntity.ok("File uploaded successfully!");
 	    }
-	 
+	 private EmployeeRoster mapToEmployee(String line) {
+		    String[] fields = line.split(","); // Assuming CSV is comma-separated
+		    System.out.println("********"+fields[1].trim()+"*****");
+		    EmployeeRoster employee = new EmployeeRoster();
+		    employee.setEmployeeName(fields[17].trim()); // Adjust index based on CSV structure
+		    employee.setDateOfBirth(LocalDate.parse(fields[10].trim(), DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+		    employee.setReservationCategory(fields[0].trim()); // Adjust as needed
+          
+		    return employee;
+		}
+	 /*
+	 @PostMapping("/EmployeeRoster/csv_upload1")
+	 public ResponseEntity<?> uploadCsv(@RequestParam("file") MultipartFile file) {
+	     try (BufferedReader reader = new BufferedReader(
+	             new InputStreamReader(file.getInputStream(), "UTF-8"))) {
+	    	 System.out.println("*************");
+	         List<String> errorMessages = new ArrayList<>();
+	         List<EmployeeRoster> employees = new ArrayList<>();
+
+	         reader.lines().skip(1).forEach(line -> {
+	        	 System.out.println("*******1******");
+	             EmployeeRoster employee = mapToEmployee(line);
+	             
+	             // Check if the record already exists
+	             boolean exists = employeeRosterRepository.existsByEmployeeNameAndDateOfBirthAndReservationCategory(
+	                     employee.getEmployeeName(), employee.getDateOfBirth(), employee.getReservationCategory());
+
+	             if (exists) {
+	                 errorMessages.add("Duplicate record found: " + employee.getEmployeeName() +
+	                         ", Date of Birth: " + employee.getDateOfBirth() +
+	                         ", Reservation Category: " + employee.getReservationCategory());
+	             } else {
+	                 employees.add(employee);
+	             }
+	         });
+
+	         // Save only non-duplicate employees
+	         if (!employees.isEmpty()) {
+	             employeeRosterRepository.saveAll(employees);
+	         }
+
+	         // Return a JSON response with details
+	         if (!errorMessages.isEmpty()) {
+	             return ResponseEntity.status(HttpStatus.CONFLICT) // 409 Conflict
+	                     .body(Map.of("message", "Some records were skipped due to duplicates", "duplicates", errorMessages));
+	         }
+
+	         return ResponseEntity.ok(Map.of("message", "File uploaded successfully!", "savedRecords", employees.size()));
+
+	     } catch (Exception e) {
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                 .body(Map.of("error", "Error processing file", "details", e.getMessage()));
+	     }
+	 }
+*/
+	 /*
+	 @PostMapping("/EmployeeRoster/csv_upload")
+	 public ResponseEntity<String> uploadCsv(@RequestParam("file") MultipartFile file) throws IOException {
+	     try {
+	         if (file.isEmpty()) {
+	             return ResponseEntity.badRequest().body("File is empty. Please upload a valid CSV file.");
+	         }
+	         
+	         employeeRosterService.uploadCsv(file);
+	         return ResponseEntity.ok("File uploaded successfully!");
+	     } catch (IllegalArgumentException e) {
+	         return ResponseEntity.badRequest().body("Invalid file format: " + e.getMessage());
+	     } catch (Exception e) {
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
+	     }
+	 }
+	 */
 	 
 	 
 	 @Autowired
@@ -239,13 +407,61 @@ public class ContentController {
 	    @Autowired
 	    private SchoolRepository schoolRepository;
 	    
-	 
+	    
+	 // Fetch Employee by ID
+	    @GetMapping("/EmployeeRoster/fetch/{id}")
+	    public ResponseEntity<EmployeeRoster> getEmployeeById(@PathVariable Long id) {
+	        Optional<EmployeeRoster> employee = employeeRosterService.getEmployeeById(id);
 
+	        return employee.map(ResponseEntity::ok)
+	                       .orElseGet(() -> ResponseEntity.notFound().build());
+	    }
+	    
+	    @GetMapping("/EmployeeRoster/resv_by_date")
+	    public ResponseEntity<List<Map<String, Object>>> getReservationByDate(
+	            @RequestParam String s  // Expecting format: YYYY-MM-DD
+	         // @RequestParam String t     // Expecting format: YYYY-MM-DD
+	    ) {
+	        return ResponseEntity.ok(employeeRosterService.getReservationByDate( s));
+	    }
+	    
+	    @GetMapping("/EmployeeRoster/goshwara_by_cat")
+	    public ResponseEntity<List<Map<String, Object>>> getgoshwaraByCat(
+	            @RequestParam Long s  // Expecting format: YYYY-MM-DD
+	         // @RequestParam String t     // Expecting format: YYYY-MM-DD
+	    ) {
+	        return ResponseEntity.ok(employeeRosterService.getgoshwaraByCat( s));
+	    }
+	    
+	    
+	    
+	    
+	    @GetMapping("/EmployeeRoster/resv_per_by_date")
+	    public ResponseEntity<List<Map<String, Object>>> getReservationPerByDate(
+	            @RequestParam String s  // Expecting format: YYYY-MM-DD
+	         // @RequestParam String t     // Expecting format: YYYY-MM-DD
+	    ) {
+	        return ResponseEntity.ok(employeeRosterService.getReservationPerByDate( s));
+	    }
+	    
+	    
+	    
+	    
+	    @GetMapping("/EmployeeRoster/summary/{instituteId}")
+	    public ResponseEntity<List<Map<String, Object>>> getReservationSummary(
+	            @PathVariable Long instituteId,
+	            @RequestParam String s  // Expecting format: YYYY-MM-DD
+	         // @RequestParam String t     // Expecting format: YYYY-MM-DD
+	    ) {
+	        return ResponseEntity.ok(employeeRosterService.getReservationSummary(instituteId, s));
+	    }
+	 
+/*
 	    @GetMapping("/EmployeeRoster/summary/{instituteId}")
 	    public ResponseEntity<List<Map<String, Object>>> getReservationSummary(@PathVariable Long instituteId) {
 	        return ResponseEntity.ok(employeeRosterService.getReservationSummary(instituteId));
 	    }
-	    
+	    */
 	    
 	    @PostMapping("/EmployeeRoster/add")
 	    public ResponseEntity<EmployeeRoster> addEmployeeRoster(@RequestBody EmployeeRoster employeeRoster) {
@@ -932,7 +1148,52 @@ public class ContentController {
 
         return ResponseEntity.ok(opdList);
     }
+    
+    
+    @Autowired
+    private MyUserRepository userserv;
+
+    @GetMapping("/userinfo")
+    public ResponseEntity<?> getUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User is not authenticated"));
+        }
+
+        String username = authentication.getName();
+        Optional<MyUser> optionalUser = userserv.findByUsername(username);
+
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+        }
+
+        MyUser user = optionalUser.get();
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getId(),
+                "username", user.getUsername(),
+                "instituteId", user.getInstitute_id(),
+                "schoolId", user.getSchool_id()//,
+             //   "roleName", user.,
+              //  "roles", user.getRoles().stream().map(Role::getName).toList()
+        ));
+    }
+    
+    
+    
+    
 	
+	private MyUser MyUser(String username) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody AuthRequest authRequest, HttpServletRequest request, HttpServletResponse response) {
 	    HttpSession session = request.getSession(true); // Ensure session is created if not exists
@@ -952,11 +1213,18 @@ public class ContentController {
 	        SecurityContextHolder.getContext().setAuthentication(authentication);
 
 	        String sessionId = session.getId();
+	        authRequest.getInstituteId();
+	        
+	        System.out.println(">>>>>>>>> " + authRequest.getInstituteId());
+	        
+	      //  response.put("InstituteId", authRequest.getInstituteId());
+         //   response.put("instituteName", authRequest.getInstitute().getName());
 	        
 	        
 	        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
-
- 
+	        
+	        //System.out.println("SchoolId: " + SchoolId);
+	      //  System.out.println("InstituteId: " + InstituteId);
 	        System.out.println("Session ID after authentication: " + sessionId);
 
 	        return ResponseEntity.ok().body(Map.of("sessionId", sessionId, "message", "Login successful"));

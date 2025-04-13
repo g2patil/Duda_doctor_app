@@ -35,6 +35,7 @@ public class Institute {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "institute", fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<School> schools;
 
     @OneToMany(mappedBy = "institute", fetch = FetchType.LAZY)

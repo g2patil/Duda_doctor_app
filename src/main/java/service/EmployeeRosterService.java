@@ -3,6 +3,7 @@ package service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,9 @@ public class EmployeeRosterService {
         return employeeRosterRepository.getAllEmployeeRoster();
     }
     
-    
+    public Optional<EmployeeRoster> getEmployeeById(Long id) {
+        return employeeRosterRepository.findById(id);
+    }
     /*****************/
     public List<Map<String, Object>> getAllEmployeeRosters(Long instituteId) {
         List<Object[]> results = employeeRosterRepository.findAllEmployeeRoster(instituteId);
@@ -81,11 +85,69 @@ public class EmployeeRosterService {
     
     
     /*********************/
-    public List<Map<String, Object>> getReservationSummary(Long instituteId) {
-        return employeeRosterRepository.getReservationSummary(instituteId);
+    
+    
+    public List<Map<String, Object>> getReservationByDate(String s ) {
+        return employeeRosterRepository.getReservationByDate(s);
     }
     
+    public List<Map<String, Object>> getReservationPerByDate(String s ) {
+        return employeeRosterRepository.getReservationPerByDate(s);
+    }
+    
+    public List<Map<String, Object>> getgoshwaraByCat(Long s ) {
+        return employeeRosterRepository.getgoshwaraByCat(s);
+    }
+    
+    
+    
+    public List<Map<String, Object>> getReservationSummary(Long instituteId,String s ) {
+        return employeeRosterRepository.getReservationSummary(instituteId,s);
+    }
+    /*
+    public List<Map<String, Object>> getReservationSummary(Long instituteId) {
+        return employeeRosterRepository.getReservationSummary(instituteId);
+    }*/
+    
     public void uploadCsv(MultipartFile file) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            List<String> errorMessages = new ArrayList<>();
+            List<EmployeeRoster> employees = new ArrayList<>();
+
+            reader.lines().skip(1).forEach(line -> {
+                EmployeeRoster employee = mapToEmployee(line);
+
+                // Check if the record already exists
+                boolean exists = employeeRosterRepository.existsByEmployeeNameAndDateOfBirthAndReservationCategory(
+                        employee.getEmployeeName(), employee.getDateOfBirth(), employee.getReservationCategory());
+
+                if (exists) {
+                    errorMessages.add("Duplicate record found: " + employee.getEmployeeName() +
+                            ", Date of Birth: " + employee.getDateOfBirth() +
+                            ", Reservation Category: " + employee.getReservationCategory());
+                } else {
+                    employees.add(employee);
+                }
+            });
+
+            // Save only non-duplicate employees
+            if (!employees.isEmpty()) {
+                employeeRosterRepository.saveAll(employees);
+            }
+
+            // If there are duplicate records, throw an exception with details
+            if (!errorMessages.isEmpty()) {
+                throw new RuntimeException("Some records were skipped due to duplicates: " + String.join("; ", errorMessages));
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing file: " + e.getMessage());
+        }
+    }
+    
+   /* public void uploadCsv(MultipartFile file) {
         try (BufferedReader reader = new BufferedReader(
         		new InputStreamReader(file.getInputStream(), "UTF-8"))) {
 
@@ -99,7 +161,7 @@ public class EmployeeRosterService {
             throw new RuntimeException("Error processing file: " + e.getMessage());
         }
     }
-
+*/
     private EmployeeRoster mapToEmployee(String line) {
         String[] fields = line.split(","); // Using tab as a delimiter based on your data structure
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -166,5 +228,55 @@ public class EmployeeRosterService {
         return employee;
     }
 
-    
+    // Update Employee
+    public EmployeeRoster updateEmployee(Long id, EmployeeRoster updatedEmployee) {
+        Optional<EmployeeRoster> existingEmployeeOpt = employeeRosterRepository.findById(id);
+        if (existingEmployeeOpt.isPresent()) {
+            EmployeeRoster existingEmployee = existingEmployeeOpt.get();
+            
+            // Update fields
+            existingEmployee.setEmployeeName(updatedEmployee.getEmployeeName());
+            existingEmployee.setDateOfBirth(updatedEmployee.getDateOfBirth());
+            existingEmployee.setPost(updatedEmployee.getPost());
+            existingEmployee.setReservationCategory(updatedEmployee.getReservationCategory());
+            existingEmployee.setEducationQualification(updatedEmployee.getEducationQualification());
+            existingEmployee.setOtherQualification(updatedEmployee.getOtherQualification());
+            existingEmployee.setDateOfJoining(updatedEmployee.getDateOfJoining());
+            existingEmployee.setDateOfRetirement(updatedEmployee.getDateOfRetirement());
+            existingEmployee.setDateOfAppointment(updatedEmployee.getDateOfAppointment());
+            existingEmployee.setDateOfPromotion(updatedEmployee.getDateOfPromotion());
+            existingEmployee.setCasteCertificateNumber(updatedEmployee.getCasteCertificateNumber());
+            existingEmployee.setCasteCertificateDate(updatedEmployee.getCasteCertificateDate());
+            existingEmployee.setCasteCertificateIssuingAuthority(updatedEmployee.getCasteCertificateIssuingAuthority());
+            existingEmployee.setCasteValidityCertificateNumber(updatedEmployee.getCasteValidityCertificateNumber());
+            existingEmployee.setCasteValidityCertificateDate(updatedEmployee.getCasteValidityCertificateDate());
+            existingEmployee.setCommitteeDetailsForCasteValidityCertificate(updatedEmployee.getCommitteeDetailsForCasteValidityCertificate());
+            existingEmployee.setDateOfPromotionAppointment(updatedEmployee.getDateOfPromotionAppointment());
+            existingEmployee.setComments(updatedEmployee.getComments());
+            existingEmployee.setEmployeeCast(updatedEmployee.getEmployeeCast());
+            existingEmployee.setIsActive(updatedEmployee.getIsActive());
+           // existingEmployee.setUpdatedBy(updatedEmployee.getUpdatedBy());
+           // existingEmployee.setUpdatedAt(updatedEmployee.getUpdatedAt());
+            existingEmployee.setBindu_Id(updatedEmployee.getBindu_Id());
+            existingEmployee.setBindu_Code(updatedEmployee.getBindu_Code());
+            existingEmployee.setBindu_Name(updatedEmployee.getBindu_Name());
+            existingEmployee.setSevarth_Id(updatedEmployee.getSevarth_Id());
+          //  existingEmployee.setCommittee_Det_Caste_Validity_Cert_Number(updatedEmployee.getCommittee_Det_Caste_Validity_Cert_Number());
+          //  existingEmployee.setCommittee_Det_Caste_Validity_Cert_Date(updatedEmployee.getCommittee_Det_Caste_Validity_Cert_Date());
+            existingEmployee.setProf_Qualification(updatedEmployee.getProf_Qualification());
+            
+            return employeeRosterRepository.save(existingEmployee);
+        } else {
+            throw new RuntimeException("Employee with ID " + id + " not found.");
+        }
+    }
+
+    // Delete Employee
+    public void deleteEmployee(Long id) {
+        if (employeeRosterRepository.existsById(id)) {
+            employeeRosterRepository.deleteById(id);
+        } else {
+            throw new RuntimeException("Employee with ID " + id + " not found.");
+        }
+    } 
 }
