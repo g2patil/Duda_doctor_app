@@ -7,9 +7,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication//(exclude = {SecurityConf.class})
-@EnableJpaRepositories(basePackages = { "model","service","repository", "security","exception"})
-@EntityScan(basePackages = {"model","service","repository", "security","exception"})
-@ComponentScan(basePackages = {"com.Duda_doctor_app", "model","service","repository", "security","exception"})
+@EnableJpaRepositories(basePackages = {"dto" ,"model","service","repository", "security","exception"})
+@EntityScan(basePackages = {"dto" ,"model","service","repository", "security","exception"})
+@ComponentScan(basePackages = {"dto" ,"com.Duda_doctor_app", "model","service","repository", "security","exception"})
 public class DudadoctorApp {
 
 	public static void main(String[] args) {

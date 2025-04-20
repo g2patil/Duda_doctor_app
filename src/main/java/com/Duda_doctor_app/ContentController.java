@@ -58,11 +58,16 @@ import org.springframework.web.multipart.MultipartFile;
 import com.adnya.Valid;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dto.SubHeadDetailsDTO;
+import dto.TransactionDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
+import model.AccountMainHead;
+import model.AccountSubHead;
+import model.AccountType;
 import model.ClubUser;
 import model.DoctorInfo;
 import model.EmployeeRoster;
@@ -83,10 +88,14 @@ import model.Role;
 import model.RolePaidStatus;
 import model.RoleSubActivity;
 import model.School;
+import model.SchoolTransaction;
 import model.bldg;
 import model.bldgRepository;
 import model.club_m_activity;
 import model.club_s_activity;
+import repository.AccountMainHeadRepository;
+import repository.AccountSubHeadRepository;
+import repository.AccountTypeRepository;
 import repository.ClubUserRepository;
 import repository.EmployeeRosterRepository;
 import repository.ExamDiffLevelRepository;
@@ -99,6 +108,7 @@ import repository.PatientRepository;
 import repository.RoleRepository;
 import repository.RoleSubActivityRepository;
 import repository.SchoolRepository;
+import repository.SchoolTransactionRepository;
 import repository.club_m_activityRepository;
 import repository.club_s_activityRepository;
 import service.ClubSActivityService;
@@ -118,6 +128,7 @@ import service.QuizAttemptRequest;
 import service.QuizService;
 import service.RoleService;
 import service.SchoolService;
+import service.TransactionService;
 
 
 @Controller
@@ -182,7 +193,127 @@ public class ContentController {
 	 @Autowired
 	    private EmployeeRosterRepository  employeeRosterRepository;
 	 
+	 @Autowired
+	    private SchoolTransactionRepository transactionRepository;
+
+	    @Autowired
+	    private AccountTypeRepository accountTypeRepo;
+
+	    @Autowired
+	    private AccountMainHeadRepository accountMainHeadRepo;
+
+	    @Autowired
+	    private AccountSubHeadRepository accountSubHeadRepo;
+	     
+	    @Autowired
+	    private MyUserRepository userRepo;
+	    
+	    @Autowired
+	    private TransactionService transactionService;
+
+	 
 	 /************For School***************/
+	    
+	    
+	    @GetMapping("/account/sub-head-detail")
+	    public ResponseEntity<List<Map<String, Object>>> getAccountSubids(
+	            @RequestParam Long s  // Expecting format: YYYY-MM-DD
+	         // @RequestParam String t     // Expecting format: YYYY-MM-DD
+	    ) {
+	        return ResponseEntity.ok(accountSubHeadRepo.getAccountSubids( s));
+	    }
+	    
+	    @GetMapping("/account/sub-head-details/{id}")
+	    public ResponseEntity<?> getSubHeadDetails(@PathVariable Long id) {
+	        Optional<AccountSubHead> subHeadOpt = accountSubHeadRepo.findById(id);
+	        if (!subHeadOpt.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sub Head not found");
+	        }
+
+	        AccountSubHead subHead = subHeadOpt.get();
+	        AccountMainHead mainHead = subHead.getAccountMainHead();
+	        AccountType accountType = mainHead.getAccountType();
+
+	       SubHeadDetailsDTO dto = new SubHeadDetailsDTO(
+	            subHead.getAccountSubHeadId(),
+	            mainHead.getAccountMainHeadId(),
+	            accountType.getAccountTypeId(),
+	            mainHead.getAccountMainHead(),
+	            accountType.getAccountType()
+	        );
+
+	        return ResponseEntity.ok(dto);
+	    }
+
+	    
+	    
+	    
+	    
+	    @GetMapping("/school/account/account-sub-heads")
+	    public ResponseEntity<List<Map<String, Object>>> getAllAccountSubHeads() {
+	    	 List<AccountSubHead> accountSubHeads = accountSubHeadRepo.findAll();
+	    	    
+	    	    // Prepare the response by manually creating a Map for each entity
+	    	    List<Map<String, Object>> response = new ArrayList<>();
+
+	    	    for (AccountSubHead accountSubHead : accountSubHeads) {
+	    	        Map<String, Object> accountSubHeadMap = new HashMap<>();
+	    	        
+	    	        // Include accountSubHeadId, accountMainHeadId, accountSubHead (name)
+	    	        accountSubHeadMap.put("accountSubHeadId", accountSubHead.getAccountSubHeadId());
+	    	        accountSubHeadMap.put("accountMainHeadId", accountSubHead.getAccountMainHead().getAccountMainHeadId());
+	    	        accountSubHeadMap.put("accountSubHead", accountSubHead.getAccountSubHead());
+	    	        
+	    	        // Add the accountTypeId (from AccountMainHead -> AccountType)
+	    	        Long accountTypeId = accountSubHead.getAccountMainHead().getAccountType().getAccountTypeId();
+	    	        accountSubHeadMap.put("accountTypeId", accountTypeId);
+	    	        
+	    	        response.add(accountSubHeadMap);
+	    	    }
+	    	    
+	    	    return ResponseEntity.ok(response);
+	    
+	    }
+	    
+	    
+	    
+	    @PostMapping("/school/account/add")
+	    public ResponseEntity<String> addTransaction(@RequestBody TransactionDTO transactionDTO) {
+	        // You can log or print the incoming data for debugging
+	        System.out.println("Transaction Received: " + transactionDTO);
+
+	        // TODO: Pass this DTO to a service class and save to DB
+	        transactionService.saveTransaction(transactionDTO);
+	        return ResponseEntity.ok("Transaction saved successfully!");
+	    }    
+	    
+	    
+	/*    
+	 @PostMapping("/school/account/add")
+	 public SchoolTransaction addTransaction(@RequestBody Map<String, Object> payload) {
+	     SchoolTransaction tx = new SchoolTransaction();
+	     tx.setTransactionDate(LocalDate.parse((String) payload.get("transactionDate")));
+	     tx.setAmount(Double.valueOf(payload.get("amount").toString()));
+	     tx.setPaymentMode((String) payload.get("paymentMode"));
+	     tx.setDescription((String) payload.get("description"));
+	     tx.setUpdatedOn(LocalDateTime.now());
+
+	     Long accountTypeId = Long.valueOf(payload.get("accountTypeId").toString());
+	     Long mainHeadId = Long.valueOf(payload.get("accountMainHeadId").toString());
+	     Long subHeadId = Long.valueOf(payload.get("accountSubHeadId").toString());
+	     Long userId = Long.valueOf(payload.get("userId").toString());
+
+	     tx.setAccountType(accountTypeRepo.findById(accountTypeId).orElse(null));
+	     tx.setAccountMainHead(accountMainHeadRepo.findById(mainHeadId).orElse(null));
+	     tx.setAccountSubHead(accountSubHeadRepo.findById(subHeadId).orElse(null));
+	     tx.setUser(userRepo.findById(userId).orElse(null));
+
+	     return transactionRepository.save(tx);
+	 }
+
+	*/ 
+	 
+	 
 	 
 	 
 	 private ResponseEntity<Resource> downloadFile(String filePath, String mediaType) {
