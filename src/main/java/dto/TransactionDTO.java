@@ -7,6 +7,7 @@ public class TransactionDTO {
     private LocalDate transactionDate;
     private Double amount;
     private String paymentMode;
+    private String cash_bank;
     private String description;
     private Long accountSubHeadId;
     private Long userId;
@@ -18,11 +19,12 @@ public class TransactionDTO {
     }
 
     // Parameterized constructor
-    public TransactionDTO(LocalDate transactionDate, Double amount, String paymentMode,
+    public TransactionDTO(LocalDate transactionDate, Double amount, String paymentMode,String cash_bank,
                           String description, Long accountSubHeadId, Long userId,Long accountTypeId,Long accountMainHeadId) {
         this.transactionDate = transactionDate;
         this.amount = amount;
         this.paymentMode = paymentMode;
+        this.cash_bank=cash_bank;
         this.description = description;
         this.accountSubHeadId = accountSubHeadId;
         this.userId = userId;
@@ -63,7 +65,15 @@ public class TransactionDTO {
         this.paymentMode = paymentMode;
     }
 
-    public String getDescription() {
+    public String getCash_bank() {
+		return cash_bank;
+	}
+
+	public void setCash_bank(String cash_bank) {
+		this.cash_bank = cash_bank;
+	}
+
+	public String getDescription() {
         return description;
     }
 
@@ -102,6 +112,7 @@ public class TransactionDTO {
                 "transactionDate='" + transactionDate + '\'' +
                 ", amount=" + amount +
                 ", paymentMode='" + paymentMode + '\'' +
+                ", cash_bank='" + cash_bank + '\'' +
                 ", description='" + description + '\'' +
                 ", accountSubHeadId=" + accountSubHeadId +
                 ", userId=" + userId +

@@ -3,6 +3,8 @@ package model;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -19,15 +21,23 @@ public class AccountSubHead {
     private String accountSubHead;
 
     @Column(name = "updated_on")
+    @JsonIgnore
     private LocalDateTime updatedOn;
 
     // Foreign key to AccountMainHead
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "account_main_head_id", referencedColumnName = "account_main_head_id")
     private AccountMainHead accountMainHead;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @JoinColumn(name = "account_type_id", referencedColumnName = "account_type_id")
+    private AccountType accountType;
 
     // Foreign key to MyUser (who updated the record)
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private MyUser user;
 

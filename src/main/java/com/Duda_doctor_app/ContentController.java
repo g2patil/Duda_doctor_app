@@ -111,6 +111,7 @@ import repository.SchoolRepository;
 import repository.SchoolTransactionRepository;
 import repository.club_m_activityRepository;
 import repository.club_s_activityRepository;
+import service.AccountTypeService;
 import service.ClubSActivityService;
 import service.ClubUserService;
 import service.DoctorService;
@@ -210,9 +211,48 @@ public class ContentController {
 	    
 	    @Autowired
 	    private TransactionService transactionService;
+	    
+	    @Autowired
+	    private AccountTypeService accountTypeService;
 
+	    @Autowired
+	    private AccountMainHeadRepository accountMainHeadRepository;
+	    
+	    @Autowired
+	    private AccountSubHeadRepository subHeadRepository;
+	    
+	    @Autowired
+	    private TransactionService service1;
 	 
 	 /************For School***************/
+	    
+	    @GetMapping("/account/report")
+	    public List<Object[]> getTransactionReport(
+	            @RequestParam("fromDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+	            @RequestParam("toDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+	            @RequestParam("accountTypeId") Integer accountTypeId) {
+
+	        return service1.getTransactionReport(fromDate, toDate, accountTypeId);
+	    }
+	    
+	    
+	    
+	    @GetMapping("/account/sub-head/by-main-head/{mainHeadId}")
+	    public ResponseEntity<List<AccountSubHead>> getSubHeadsByMainHead(@PathVariable Long mainHeadId) {
+	        List<AccountSubHead> subHeads = subHeadRepository.findByAccountMainHead_AccountMainHeadId(mainHeadId);
+	        return ResponseEntity.ok(subHeads);
+	    }
+	    
+	    
+	    @GetMapping("/account/sub-head/by-main-head_01/")
+	    public ResponseEntity<List<AccountSubHead>> getSubHeadsByMainHeadAndType(
+	        @RequestParam Long mainHeadId,
+	        @RequestParam Long accountTypeId) {
+	        
+	        List<AccountSubHead> subHeads = subHeadRepository.findByAccountMainHead_AccountMainHeadIdAndAccountType_AccountTypeId(mainHeadId, accountTypeId);
+	        return ResponseEntity.ok(subHeads);
+	    }
+	    
 	    
 	    
 	    @GetMapping("/account/sub-head-detail")
@@ -246,6 +286,20 @@ public class ContentController {
 	    }
 
 	    
+	    @GetMapping("/school/account/main-head/by-account-type/{accountTypeId}")
+	    public List<AccountMainHead> getByAccountTypeId(@PathVariable Long accountTypeId) {
+	        return accountMainHeadRepository.findByAccountType_AccountTypeId(accountTypeId);
+	    }
+	    
+	    
+	    
+	    
+	    @GetMapping("/school/account/account-types")
+	    public List<AccountType> getAllAccountTypes() {
+	        return accountTypeService.getAllAccountTypes();
+	    }
+	    
+	    
 	    
 	    
 	    
@@ -275,9 +329,36 @@ public class ContentController {
 	    
 	    }
 	    
+	   
 	    
 	    
-	    @PostMapping("/school/account/add")
+	    @GetMapping("/school/account/transactions/today")
+	    public List<Map<String, Object>> getTransactionsForToday() {
+	      //  return service1.getTransactionsForToday();
+	    	//  return service1.getLatestFiveTransactionsById();
+	    	 return service1.findLast5Transactions();
+	    }
+	    
+	    
+	    
+	    @GetMapping("/school/account/last-txn")
+	    public ResponseEntity<SchoolTransaction> getLastTransaction() {
+	        SchoolTransaction lastTxn = transactionService.getLastTransaction();
+	        return ResponseEntity.ok(lastTxn);
+	    }
+	    
+	    
+	     @PostMapping("/school/account/add")
+	    public ResponseEntity<String> addTransaction(@RequestBody SchoolTransaction transaction) {
+	        // You can log or print the incoming data for debugging
+	        System.out.println("Transaction Received: " + transaction);
+
+	        // Pass the entity to a service class and save to DB
+	        transactionService.saveTransaction(transaction);
+	        return ResponseEntity.ok("Transaction saved successfully!");
+	    }
+	   /*
+	   @PostMapping("/school/account/add")
 	    public ResponseEntity<String> addTransaction(@RequestBody TransactionDTO transactionDTO) {
 	        // You can log or print the incoming data for debugging
 	        System.out.println("Transaction Received: " + transactionDTO);
@@ -286,7 +367,7 @@ public class ContentController {
 	        transactionService.saveTransaction(transactionDTO);
 	        return ResponseEntity.ok("Transaction saved successfully!");
 	    }    
-	    
+	    */
 	    
 	/*    
 	 @PostMapping("/school/account/add")

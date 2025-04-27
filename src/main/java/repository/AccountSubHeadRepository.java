@@ -20,4 +20,10 @@ public interface AccountSubHeadRepository extends JpaRepository<AccountSubHead, 
 	    	    """, nativeQuery = true)
 	    	List<Map<String, Object>> getAccountSubids(@Param("id") Long id);
 
+
+	  List<AccountSubHead> findByAccountMainHead_AccountMainHeadId(Long mainHeadId);
+
+	  List<AccountSubHead> findByAccountMainHead_AccountMainHeadIdAndAccountType_AccountTypeId(
+			    Long mainHeadId, Long accountTypeId);
+	  
 }

@@ -30,6 +30,10 @@ public class SchoolTransaction {
 
     @Column(name = "payment_mode")
     private String paymentMode;
+    
+    @Column(name = "cash_bank")
+    private String cash_bank;
+    
 
     @Column(name = "description")
     private String description;
@@ -43,19 +47,19 @@ public class SchoolTransaction {
     private AccountType accountType;
 
     // === Account Main Head (Change from Long to AccountMainHead)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_main_head_id", referencedColumnName = "account_main_head_id")
-    private AccountMainHead accountMainHead;  // Referencing AccountMainHead entity
+  //  @ManyToOne(fetch = FetchType.LAZY)
+  //  @JoinColumn(name = "account_main_head_id", referencedColumnName = "account_main_head_id")
+    private Long/*AccountMainHead */accountMainHead;  // Referencing AccountMainHead entity
 
     // === Account Sub Head (Change from Long to AccountSubHead)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_sub_head_id", referencedColumnName = "account_sub_head_id")
-    private AccountSubHead accountSubHead;  // Referencing AccountSubHead entity
+   // @ManyToOne(fetch = FetchType.LAZY)
+   // @JoinColumn(name = "account_sub_head_id", referencedColumnName = "account_sub_head_id")
+    private Long account_sub_head_id;  // Referencing AccountSubHead entity
 
     // === User who updated
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private MyUser user;
+  //  @ManyToOne
+  //  @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private Long/*MyUser*/ user;
 
     // Getters and setters
 
@@ -115,27 +119,27 @@ public class SchoolTransaction {
         this.accountType = accountType;
     }
 
-    public AccountMainHead getAccountMainHead() {
+    public Long/*AccountMainHead*/ getAccountMainHead() {
         return accountMainHead;
     }
 
-    public void setAccountMainHead(AccountMainHead accountMainHead) {
+    public void setAccountMainHead(Long/*AccountMainHead*/ accountMainHead) {
         this.accountMainHead = accountMainHead;
     }
 
-    public AccountSubHead getAccountSubHead() {
-        return accountSubHead;
+    public Long getAccountSubHead() {
+        return account_sub_head_id;
     }
 
-    public void setAccountSubHead(AccountSubHead accountSubHead) {
-        this.accountSubHead = accountSubHead;
+    public void setAccountSubHead(Long accountSubHead) {
+        this.account_sub_head_id = accountSubHead;
     }
 
-    public MyUser getUser() {
+    public Long/*MyUser*/ getUser() {
         return user;
     }
 
-    public void setUser(MyUser user) {
+    public void setUser(Long/*MyUser*/ user) {
         this.user = user;
     }
 
@@ -147,6 +151,14 @@ public class SchoolTransaction {
 	public void setUserId(Long userId) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public String getCash_bank() {
+		return cash_bank;
+	}
+
+	public void setCash_bank(String cash_bank) {
+		this.cash_bank = cash_bank;
 	}
     
 }
