@@ -75,6 +75,24 @@ public interface EmployeeRosterRepository extends JpaRepository<EmployeeRoster, 
 	    	    """, nativeQuery = true)
 	    	List<Map<String, Object>> getReservationByDate(@Param("startDate") String startDate);
 
+	
+	    @Query(value = """
+				SELECT er.reservation_category, mr.bindu_name, mr.bindu_name_mar,mr.percentage,
+				string_agg(DISTINCT er.bindu_id::text, ', ') AS bindu_nos,count(*) fill_nos
+				FROM public.maharashtra_reservation mr,public.employee_roster er,public.reservation_dates rd
+				where mr.resv_cat_id=to_number(er.bindu_code,'999')
+				and   mr.resv_cat_id=to_number(rd.resv_cat,'999')
+				AND er.institute_id=:instituteId and rd.reservation_date < CAST(:startDate AS DATE)
+				group by er.reservation_category, mr.bindu_name_mar, mr.bindu_name,mr.percentage
+				order by to_number(er.reservation_category,'99999')
+	    	    """, nativeQuery = true)
+	    	List<Map<String, Object>> getgoshwaraByCat(@Param("instituteId") Long instituteId,@Param("startDate") String startDate);
+	    
+	    
+	    
+	    
+	    
+	    
 	    @Query(value = """
 				SELECT er.reservation_category, mr.bindu_name, mr.bindu_name_mar,mr.percentage,
 				string_agg(DISTINCT er.bindu_id::text, ', ') AS bindu_nos,count(*) fill_nos
@@ -84,7 +102,7 @@ public interface EmployeeRosterRepository extends JpaRepository<EmployeeRoster, 
 				group by er.reservation_category, mr.bindu_name_mar, mr.bindu_name,mr.percentage
 				order by to_number(er.reservation_category,'99999')
 	    	    """, nativeQuery = true)
-	    	List<Map<String, Object>> getgoshwaraByCat(@Param("instituteId") Long instituteId);
+	    	List<Map<String, Object>> getgoshwaraByCatold(@Param("instituteId") Long instituteId);
 	    
 	    
 	    

@@ -1,6 +1,7 @@
 package service;
 
 import dto.TransactionDTO;
+import jakarta.transaction.Transaction;
 import model.*;
 import repository.*;
 
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class TransactionService {
@@ -90,5 +92,29 @@ public class TransactionService {
 		  public List<Object[]> getTransactionReport(LocalDate fromDate, LocalDate toDate, Integer accountTypeId) {
 		        return repository.fetchTransactionReport(fromDate, toDate, accountTypeId);
 		    }
+
+		public List<Object[]> getCombinedTransactions(LocalDate fromDate, LocalDate toDate, Integer accountTypeId,
+				Integer accountTypeId1) {
+			// TODO Auto-generated method stub
+			return repository.getCombinedTransactions( fromDate, toDate,accountTypeId, accountTypeId1);
+			
+		}
+
+		public SchoolTransaction getTransactionById(Long id) {
+		    return repository.findById(id).orElse(null);
+		}
+
+		public boolean deleteTransactionById(Long id) {
+		    if (repository.existsById(id)) {
+		    	repository.deleteById(id);
+		        return true;
+		    }
+		    return false;
+		}
+
+		public SchoolTransaction findById(Long id) {
+	        Optional<SchoolTransaction> transaction = repository.findById(id);
+	        return transaction.orElse(null); // Returns null if not found
+	    }
 	
 }

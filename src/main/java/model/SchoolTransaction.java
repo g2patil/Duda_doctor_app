@@ -27,8 +27,42 @@ public class SchoolTransaction {
 
     @Column(name = "amount")
     private Double amount;
+    
+    
+    @Column(name = "voucher_no")
+    private Long voucher_no;
+    
+    
+    @Column(name = "lf_no")
+    private Long lf_no;
+    
+    
 
-    @Column(name = "payment_mode")
+    public Long getLf_no() {
+		return lf_no;
+	}
+
+	public void setLf_no(Long lf_no) {
+		this.lf_no = lf_no;
+	}
+
+	public Long getVoucher_no() {
+		return voucher_no;
+	}
+
+	public void setVoucher_no(Long voucher_no) {
+		this.voucher_no = voucher_no;
+	}
+
+	public Long getAccount_sub_head_id() {
+		return account_sub_head_id;
+	}
+
+	public void setAccount_sub_head_id(Long account_sub_head_id) {
+		this.account_sub_head_id = account_sub_head_id;
+	}
+
+	@Column(name = "payment_mode")
     private String paymentMode;
     
     @Column(name = "cash_bank")
@@ -49,11 +83,13 @@ public class SchoolTransaction {
     // === Account Main Head (Change from Long to AccountMainHead)
   //  @ManyToOne(fetch = FetchType.LAZY)
   //  @JoinColumn(name = "account_main_head_id", referencedColumnName = "account_main_head_id")
+    @Column(nullable = false)
     private Long/*AccountMainHead */accountMainHead;  // Referencing AccountMainHead entity
 
     // === Account Sub Head (Change from Long to AccountSubHead)
    // @ManyToOne(fetch = FetchType.LAZY)
    // @JoinColumn(name = "account_sub_head_id", referencedColumnName = "account_sub_head_id")
+    @Column(nullable = false)
     private Long account_sub_head_id;  // Referencing AccountSubHead entity
 
     // === User who updated

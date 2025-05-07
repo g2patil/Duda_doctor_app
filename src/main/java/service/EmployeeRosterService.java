@@ -95,8 +95,8 @@ public class EmployeeRosterService {
         return employeeRosterRepository.getReservationPerByDate(s);
     }
     
-    public List<Map<String, Object>> getgoshwaraByCat(Long s ) {
-        return employeeRosterRepository.getgoshwaraByCat(s);
+    public List<Map<String, Object>> getgoshwaraByCat(Long s,String dt ) {
+        return employeeRosterRepository.getgoshwaraByCat(s,dt);
     }
     
     

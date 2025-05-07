@@ -64,6 +64,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transaction;
 import jakarta.transaction.Transactional;
 import model.AccountMainHead;
 import model.AccountSubHead;
@@ -226,6 +227,20 @@ public class ContentController {
 	 
 	 /************For School***************/
 	    
+	    @GetMapping("/account/combine/report")
+	    public List<Object[]> getcombTransactionReport(
+	            @RequestParam("fromDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+	            @RequestParam("toDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+	            @RequestParam("accountTypeId") Integer accountTypeId,
+	            @RequestParam("accountTypeId1") Integer accountTypeId1
+	            ) {
+
+	        return service1.getCombinedTransactions(fromDate, toDate, accountTypeId,accountTypeId1);
+	    }
+	    
+	    
+	    
+	    
 	    @GetMapping("/account/report")
 	    public List<Object[]> getTransactionReport(
 	            @RequestParam("fromDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
@@ -348,6 +363,10 @@ public class ContentController {
 	    }
 	    
 	    
+	    
+	    
+	    
+	    
 	     @PostMapping("/school/account/add")
 	    public ResponseEntity<String> addTransaction(@RequestBody SchoolTransaction transaction) {
 	        // You can log or print the incoming data for debugging
@@ -357,6 +376,55 @@ public class ContentController {
 	        transactionService.saveTransaction(transaction);
 	        return ResponseEntity.ok("Transaction saved successfully!");
 	    }
+	     
+	     @DeleteMapping("/school/account/delete/{id}")
+	     public ResponseEntity<String> deleteTransaction(@PathVariable Long id) {
+	         boolean deleted = transactionService.deleteTransactionById(id);
+	         if (!deleted) {
+	             return ResponseEntity.notFound().build();
+	         }
+	         return ResponseEntity.ok("Transaction deleted successfully!");
+	     } 
+	
+
+	         @PutMapping("/school/account/update/{id}")
+	         public ResponseEntity<String> updateTransaction(@PathVariable Long id, @RequestBody SchoolTransaction updatedTransaction) {
+	             SchoolTransaction existingTransaction = transactionService.getTransactionById(id);
+	             if (existingTransaction == null) {
+	                 return ResponseEntity.notFound().build();
+	             }
+
+	             existingTransaction.setTransactionDate(updatedTransaction.getTransactionDate());
+	             existingTransaction.setAmount(updatedTransaction.getAmount());
+	             existingTransaction.setVoucher_no(updatedTransaction.getVoucher_no());
+	             existingTransaction.setLf_no(updatedTransaction.getLf_no());
+	             existingTransaction.setPaymentMode(updatedTransaction.getPaymentMode());
+	             existingTransaction.setCash_bank(updatedTransaction.getCash_bank());
+	             existingTransaction.setDescription(updatedTransaction.getDescription());
+	             existingTransaction.setUpdatedOn(LocalDateTime.now()); // optional: use current timestamp
+
+	             // If updating relationships by ID (optional, check logic in service/repository)
+	             existingTransaction.setAccountType(updatedTransaction.getAccountType()); // if entire object is passed
+	             existingTransaction.setAccountMainHead(updatedTransaction.getAccountMainHead());
+	             existingTransaction.setAccountSubHead(updatedTransaction.getAccountSubHead());
+	             existingTransaction.setUser(updatedTransaction.getUser());
+
+	             transactionService.saveTransaction(existingTransaction);
+	             return ResponseEntity.ok("Transaction updated successfully!");  
+	             }
+	     
+	         @GetMapping("/school/account/transaction/{id}")
+	         public ResponseEntity<SchoolTransaction> getTransactionById(@PathVariable Long id) {
+	             SchoolTransaction transaction = transactionService.findById(id);
+	             if (transaction != null) {
+	                 return ResponseEntity.ok(transaction);
+	             } else {
+	                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // return 404 if not found
+	             }
+	         }
+	     
+	     
+	     
 	   /*
 	   @PostMapping("/school/account/add")
 	    public ResponseEntity<String> addTransaction(@RequestBody TransactionDTO transactionDTO) {
@@ -639,10 +707,10 @@ public class ContentController {
 	    
 	    @GetMapping("/EmployeeRoster/goshwara_by_cat")
 	    public ResponseEntity<List<Map<String, Object>>> getgoshwaraByCat(
-	            @RequestParam Long s  // Expecting format: YYYY-MM-DD
-	         // @RequestParam String t     // Expecting format: YYYY-MM-DD
+	            @RequestParam Long s , // Expecting format: YYYY-MM-DD
+	          @RequestParam String dt     // Expecting format: YYYY-MM-DD
 	    ) {
-	        return ResponseEntity.ok(employeeRosterService.getgoshwaraByCat( s));
+	        return ResponseEntity.ok(employeeRosterService.getgoshwaraByCat( s,dt));
 	    }
 	    
 	    
